@@ -16,7 +16,7 @@ export interface AuthResponse {
     id: string;
     email: string;
     username?: string;
-    subscriptionTier: 'free' | 'pro' | 'enterprise';
+    subscriptionTier: 'FREE' | 'PRO' | 'ENTERPRISE';
   };
   token?: string;
   accessToken?: string;
@@ -74,4 +74,4 @@ export const authService = {
       delete axios.defaults.headers.common['Authorization'];
     }
   },
-}
+};

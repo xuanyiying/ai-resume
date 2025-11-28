@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   Request,
@@ -17,6 +18,8 @@ import {
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '../user/guards/jwt-auth.guard';
 import { RawBodyRequest } from '@nestjs/common';
+import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
+import { SubscriptionResponseDto } from './dto/subscription-response.dto';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -30,12 +33,43 @@ export class PaymentController {
   @ApiResponse({ status: 201, description: 'Checkout session created' })
   async createCheckoutSession(
     @Request() req: any,
-    @Body('priceId') priceId: string
+    @Body() createCheckoutSessionDto: CreateCheckoutSessionDto
   ) {
-    if (!priceId) {
-      throw new BadRequestException('Price ID is required');
-    }
-    return this.paymentService.createCheckoutSession(req.user.id, priceId);
+    return this.paymentService.createCheckoutSession(
+      req.user.id,
+      createCheckoutSessionDto.priceId
+    );
+  }
+
+  @Get('subscription')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user subscription details' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription details',
+    type: SubscriptionResponseDto,
+  })
+  async getUserSubscription(@Request() req: any) {
+    return this.paymentService.getUserSubscription(req.user.id);
+  }
+
+  @Post('cancel-subscription')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancel user subscription' })
+  @ApiResponse({ status: 200, description: 'Subscription canceled' })
+  async cancelSubscription(@Request() req: any) {
+    return this.paymentService.cancelSubscription(req.user.id);
+  }
+
+  @Get('billing-history')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user billing history' })
+  @ApiResponse({ status: 200, description: 'Billing history' })
+  async getBillingHistory(@Request() req: any) {
+    return this.paymentService.getBillingHistory(req.user.id);
   }
 
   @Post('webhook')

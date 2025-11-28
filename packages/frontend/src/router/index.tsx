@@ -16,6 +16,9 @@ import PricingPage from '../pages/PricingPage';
 import TermsOfServicePage from '../pages/TermsOfServicePage';
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import OAuthCallbackPage from '../pages/OAuthCallbackPage';
+import PaymentSuccessPage from '../pages/PaymentSuccessPage';
+import PaymentCancelPage from '../pages/PaymentCancelPage';
+import SubscriptionManagementPage from '../pages/SubscriptionManagementPage';
 
 const routes: RouteObject[] = [
   {
@@ -73,6 +76,18 @@ const routes: RouteObject[] = [
       {
         path: 'pricing',
         element: <PricingPage />,
+      },
+      {
+        path: 'payment/success',
+        element: <PaymentSuccessPage />,
+      },
+      {
+        path: 'payment/cancel',
+        element: <PaymentCancelPage />,
+      },
+      {
+        path: 'subscription',
+        element: <SubscriptionManagementPage />,
       },
       {
         path: 'admin/prompts',

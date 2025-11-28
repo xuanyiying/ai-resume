@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import axios from '../config/axios';
 
 interface User {
   id: string;
   email: string;
   username?: string;
   avatar?: string;
-  subscriptionTier: 'free' | 'pro' | 'enterprise';
+  subscriptionTier: 'FREE' | 'PRO' | 'ENTERPRISE';
   role?: 'USER' | 'ADMIN';
   createdAt?: string;
 }
@@ -18,6 +19,7 @@ interface AuthState {
   setAuth: (user: User, token: string) => void;
   clearAuth: () => void;
   updateUser: (user: Partial<User>) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,6 +40,16 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, ...userData } : null,
         })),
+      refreshProfile: async () => {
+        try {
+          const response = await axios.get('/auth/profile');
+          set((state) => ({
+            user: { ...state.user, ...response.data },
+          }));
+        } catch (error) {
+          console.error('Failed to refresh profile:', error);
+        }
+      },
     }),
     {
       name: 'auth-storage',
