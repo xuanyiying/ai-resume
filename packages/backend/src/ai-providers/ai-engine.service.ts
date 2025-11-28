@@ -125,7 +125,8 @@ export class AIEngineService implements OnModuleInit {
   async call(
     request: AIRequest,
     userId: string,
-    scenario: string = ScenarioType.GENERAL
+    scenario: string = ScenarioType.GENERAL,
+    language: string = 'en'
   ): Promise<AIResponse> {
     const startTime = Date.now();
     let selectedModel = '';
@@ -161,6 +162,7 @@ export class AIEngineService implements OnModuleInit {
       if (request.metadata?.templateName) {
         const template = await this.promptTemplateManager.getTemplate(
           request.metadata.templateName as string,
+          language,
           providerName
         );
 
@@ -279,7 +281,8 @@ export class AIEngineService implements OnModuleInit {
   async *stream(
     request: AIRequest,
     userId: string,
-    scenario: string = ScenarioType.GENERAL
+    scenario: string = ScenarioType.GENERAL,
+    language: string = 'en'
   ): AsyncGenerator<AIStreamChunk> {
     const startTime = Date.now();
     let selectedModel = '';
@@ -305,6 +308,7 @@ export class AIEngineService implements OnModuleInit {
       if (request.metadata?.templateName) {
         const template = await this.promptTemplateManager.getTemplate(
           request.metadata.templateName as string,
+          language,
           providerName
         );
 

@@ -6,6 +6,7 @@ import {
   PromptScenario,
   TemplateRenderContext,
 } from '../interfaces/prompt-template.interface';
+import { PREDEFINED_TEMPLATES } from './predefined-templates';
 
 /**
  * Prompt Template Manager
@@ -32,7 +33,12 @@ export class PromptTemplateManager {
     for (const template of predefinedTemplates) {
       try {
         const existing = await this.prisma.promptTemplate.findUnique({
-          where: { name: template.name },
+          where: {
+            name_language: {
+              name: template.name,
+              language: template.language
+            }
+          },
         });
 
         if (!existing) {
@@ -40,6 +46,7 @@ export class PromptTemplateManager {
             data: {
               name: template.name,
               scenario: template.scenario,
+              language: template.language,
               template: template.template,
               variables: template.variables,
               provider: template.provider,
@@ -47,11 +54,11 @@ export class PromptTemplateManager {
               isActive: true,
             },
           });
-          this.logger.log(`Created predefined template: ${template.name}`);
+          this.logger.log(`Created predefined template: ${template.name} (${template.language})`);
         }
       } catch (error) {
         this.logger.error(
-          `Failed to initialize template ${template.name}:`,
+          `Failed to initialize template ${template.name} (${template.language}):`,
           error
         );
       }
@@ -61,139 +68,8 @@ export class PromptTemplateManager {
   /**
    * Get predefined templates for all scenarios
    */
-  private getPredefinedTemplates(): Array<{
-    name: string;
-    scenario: string;
-    template: string;
-    variables: string[];
-    provider?: string;
-    isEncrypted: boolean;
-  }> {
-    return [
-      {
-        name: 'resume_parsing_default',
-        scenario: PromptScenario.RESUME_PARSING,
-        template: `Please parse the following resume and extract the key information in JSON format:
-
-Resume Content:
-{resume_content}
-
-Extract the following information:
-1. Personal Information (name, email, phone, location)
-2. Professional Summary
-3. Work Experience (company, position, duration, responsibilities)
-4. Education (school, degree, field, graduation date)
-5. Skills (technical and soft skills)
-6. Certifications and Awards
-7. Languages
-
-Return the result as valid JSON.`,
-        variables: ['resume_content'],
-        isEncrypted: false,
-      },
-      {
-        name: 'job_description_parsing_default',
-        scenario: PromptScenario.JOB_DESCRIPTION_PARSING,
-        template: `Please parse the following job description and extract the key requirements:
-
-Job Description:
-{job_description}
-
-Extract the following information:
-1. Job Title
-2. Company
-3. Location
-4. Job Type (Full-time, Part-time, Contract, etc.)
-5. Salary Range (if available)
-6. Required Skills
-7. Required Experience
-8. Responsibilities
-9. Nice-to-have Skills
-10. Benefits
-
-Return the result as valid JSON.`,
-        variables: ['job_description'],
-        isEncrypted: false,
-      },
-      {
-        name: 'resume_optimization_default',
-        scenario: PromptScenario.RESUME_OPTIMIZATION,
-        template: `Based on the following resume and job description, provide specific optimization suggestions:
-
-Resume:
-{resume_content}
-
-Job Description:
-{job_description}
-
-Please provide:
-1. Top 5 specific improvements to make the resume more relevant to this job
-2. Keywords from the job description that should be added to the resume
-3. Sections that should be reordered or emphasized
-4. Specific achievements that should be highlighted
-5. Any gaps that need to be addressed
-
-Format each suggestion with a clear explanation of why it matters.`,
-        variables: ['resume_content', 'job_description'],
-        isEncrypted: false,
-      },
-      {
-        name: 'interview_question_generation_default',
-        scenario: PromptScenario.INTERVIEW_QUESTION_GENERATION,
-        template: `Generate interview questions based on the following resume and job description:
-
-Resume:
-{resume_content}
-
-Job Description:
-{job_description}
-
-Generate 5 interview questions that:
-1. Are relevant to the job position
-2. Assess the candidate's experience and skills
-3. Include behavioral, technical, and situational questions
-4. Are based on specific information from the resume
-
-For each question, provide:
-- The question itself
-- The type (behavioral, technical, situational, or resume-based)
-- A suggested answer framework
-- Tips for evaluating the response
-
-Return as JSON array.`,
-        variables: ['resume_content', 'job_description'],
-        isEncrypted: false,
-      },
-      {
-        name: 'match_score_calculation_default',
-        scenario: PromptScenario.MATCH_SCORE_CALCULATION,
-        template: `Calculate a match score between the resume and job description:
-
-Resume:
-{resume_content}
-
-Job Description:
-{job_description}
-
-Analyze the match across these dimensions:
-1. Required Skills Match (0-100)
-2. Experience Level Match (0-100)
-3. Education Match (0-100)
-4. Industry Experience Match (0-100)
-5. Overall Cultural Fit (0-100)
-
-For each dimension, provide:
-- Score (0-100)
-- Matching elements
-- Missing elements
-- Improvement suggestions
-
-Calculate an overall match score (0-100) as a weighted average.
-Return as JSON with detailed breakdown.`,
-        variables: ['resume_content', 'job_description'],
-        isEncrypted: false,
-      },
-    ];
+  private getPredefinedTemplates() {
+    return PREDEFINED_TEMPLATES;
   }
 
   /**
@@ -203,13 +79,14 @@ Return as JSON with detailed breakdown.`,
    */
   async getTemplate(
     scenario: string,
+    language: string = 'en',
     provider?: string,
     version?: number
   ): Promise<PromptTemplate | null> {
     try {
       // Try to get provider-specific template first
       if (provider) {
-        const cacheKey = `${scenario}:${provider}:${version || 'latest'}`;
+        const cacheKey = `${scenario}:${language}:${provider}:${version || 'latest'}`;
         if (this.templateCache.has(cacheKey)) {
           return this.templateCache.get(cacheKey) || null;
         }
@@ -217,6 +94,7 @@ Return as JSON with detailed breakdown.`,
         const template = await this.prisma.promptTemplate.findFirst({
           where: {
             scenario,
+            language,
             provider,
             isActive: true,
           },
@@ -228,8 +106,8 @@ Return as JSON with detailed breakdown.`,
         }
       }
 
-      // Fall back to generic template
-      const cacheKey = `${scenario}:generic:${version || 'latest'}`;
+      // Fall back to generic template for specified language
+      const cacheKey = `${scenario}:${language}:generic:${version || 'latest'}`;
       if (this.templateCache.has(cacheKey)) {
         return this.templateCache.get(cacheKey) || null;
       }
@@ -237,6 +115,7 @@ Return as JSON with detailed breakdown.`,
       const template = await this.prisma.promptTemplate.findFirst({
         where: {
           scenario,
+          language,
           provider: null,
           isActive: true,
         },
@@ -247,10 +126,15 @@ Return as JSON with detailed breakdown.`,
         return template as PromptTemplate;
       }
 
+      // Fall back to English if requested language not found
+      if (language !== 'en') {
+        return this.getTemplate(scenario, 'en', provider, version);
+      }
+
       return null;
     } catch (error) {
       this.logger.error(
-        `Failed to get template for scenario ${scenario}:`,
+        `Failed to get template for scenario ${scenario} (${language}):`,
         error
       );
       return null;
@@ -526,6 +410,7 @@ Return as JSON with detailed breakdown.`,
   async createTemplate(data: {
     name: string;
     scenario: string;
+    language?: string;
     template: string;
     variables: string[];
     provider?: string;
@@ -536,6 +421,7 @@ Return as JSON with detailed breakdown.`,
         data: {
           name: data.name,
           scenario: data.scenario,
+          language: data.language || 'en',
           template: data.template,
           variables: data.variables,
           provider: data.provider,
@@ -547,7 +433,7 @@ Return as JSON with detailed breakdown.`,
       // Clear cache
       this.templateCache.clear();
 
-      this.logger.log(`Created template: ${data.name}`);
+      this.logger.log(`Created template: ${data.name} (${data.language || 'en'})`);
 
       return created as PromptTemplate;
     } catch (error) {

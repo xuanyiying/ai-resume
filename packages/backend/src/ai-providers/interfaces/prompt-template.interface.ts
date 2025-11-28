@@ -12,6 +12,7 @@ export interface PromptTemplate {
   id: string;
   name: string;
   scenario: string;
+  language: string; // Added to support multi-language prompts
   template: string;
   variables: string[];
   version: number;

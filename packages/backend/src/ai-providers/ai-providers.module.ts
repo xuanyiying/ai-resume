@@ -20,11 +20,13 @@ import { SecurityService } from './security';
 import { AILogger } from './logging/ai-logger';
 import { AIEngineService } from './ai-engine.service';
 import { AIController } from './ai.controller';
+import { PromptAdminController } from './prompt-admin.controller';
+import { ModelAdminController } from './model-admin.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [ConfigModule, PrismaModule],
-  controllers: [AIController],
+  controllers: [AIController, PromptAdminController, ModelAdminController],
   providers: [
     ProviderConfigService,
     YamlConfigLoader,
@@ -51,4 +53,4 @@ import { PrismaModule } from '../prisma/prisma.module';
     AIEngineService,
   ],
 })
-export class AIProvidersModule {}
+export class AIProvidersModule { }

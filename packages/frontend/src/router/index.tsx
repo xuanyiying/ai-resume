@@ -7,6 +7,8 @@ import RegisterPage from '../pages/RegisterPage';
 import ChatPage from '../pages/ChatPage';
 import ProfilePage from '../pages/ProfilePage';
 import SettingsPage from '../pages/SettingsPage';
+import PromptManagementPage from '../pages/PromptManagementPage';
+import ModelManagementPage from '../pages/ModelManagementPage';
 
 const routes: RouteObject[] = [
   {
@@ -36,6 +38,22 @@ const routes: RouteObject[] = [
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'admin/prompts',
+        element: (
+          <ProtectedRoute requiredRole="ADMIN">
+            <PromptManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/models',
+        element: (
+          <ProtectedRoute requiredRole="ADMIN">
+            <ModelManagementPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '*',

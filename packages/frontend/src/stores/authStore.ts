@@ -7,6 +7,7 @@ interface User {
   username?: string;
   avatar?: string;
   subscriptionTier: 'free' | 'pro' | 'enterprise';
+  role?: 'USER' | 'ADMIN';
   createdAt?: string;
 }
 

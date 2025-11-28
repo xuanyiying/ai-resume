@@ -311,6 +311,7 @@ describe('PromptVersionManager', () => {
         id: templateId,
         name: 'template',
         scenario: 'test',
+        language: 'en',
         template: 'Old content',
         variables: ['var1'],
         provider: null,

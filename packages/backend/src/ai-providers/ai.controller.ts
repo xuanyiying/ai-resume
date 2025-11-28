@@ -34,7 +34,7 @@ export class AIController {
     private usageTrackerService: UsageTrackerService,
     private performanceMonitorService: PerformanceMonitorService,
     private aiLogger: AILogger
-  ) {}
+  ) { }
 
   @Post('call')
   async callAI(
@@ -461,6 +461,7 @@ export class AIController {
       }
       const template = await this.promptTemplateManager.getTemplate(
         body.scenario,
+        'en', // default language
         body.provider,
         body.version
       );

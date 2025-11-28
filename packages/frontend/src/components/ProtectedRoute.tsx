@@ -6,10 +6,11 @@ import { authService } from '../services/authService';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: 'USER' | 'ADMIN';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, token, setAuth, clearAuth } = useAuthStore();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
+  const { isAuthenticated, token, user, setAuth, clearAuth } = useAuthStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,8 +19,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (isAuthenticated && token) {
         try {
           // Verify token is still valid
-          const user = await authService.getCurrentUser();
-          setAuth(user, token);
+          const currentUser = await authService.getCurrentUser();
+          setAuth(currentUser, token);
         } catch (error) {
           // Token is invalid, clear auth
           console.log('Token verification failed');
@@ -53,6 +54,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isAuthenticated || !token) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check role if required
+  if (requiredRole && user?.role !== requiredRole) {
+    // If user is logged in but doesn't have the required role, redirect to home
+    // Ideally this should be a 403 Forbidden page
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

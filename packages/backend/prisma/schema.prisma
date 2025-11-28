@@ -9,12 +9,24 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum SubscriptionTier {
+    FREE
+    PRO
+    ENTERPRISE
+}
+
+enum Role {
+    USER
+    ADMIN
+}
+
 // User model
 model User {
     id                    String           @id @default(uuid())
     email                 String           @unique
     passwordHash          String
     username              String?
+    role                  Role             @default(USER)
     phone                 String?
     avatarUrl             String?
     subscriptionTier      SubscriptionTier @default(FREE)
@@ -35,12 +47,6 @@ model User {
 
     @@index([email])
     @@map("users")
-}
-
-enum SubscriptionTier {
-    FREE
-    PRO
-    ENTERPRISE
 }
 
 // Resume model
