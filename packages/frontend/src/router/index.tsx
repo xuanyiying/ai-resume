@@ -19,6 +19,7 @@ import OAuthCallbackPage from '../pages/OAuthCallbackPage';
 import PaymentSuccessPage from '../pages/PaymentSuccessPage';
 import PaymentCancelPage from '../pages/PaymentCancelPage';
 import SubscriptionManagementPage from '../pages/SubscriptionManagementPage';
+import InterviewPage from '../pages/InterviewPage';
 
 const routes: RouteObject[] = [
   {
@@ -88,6 +89,10 @@ const routes: RouteObject[] = [
       {
         path: 'subscription',
         element: <SubscriptionManagementPage />,
+      },
+      {
+        path: 'interview/:optimizationId',
+        element: <InterviewPage />,
       },
       {
         path: 'admin/prompts',

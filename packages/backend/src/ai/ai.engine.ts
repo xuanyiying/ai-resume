@@ -256,6 +256,92 @@ export class AIEngine {
   }
 
   /**
+   * Chat with interviewer persona
+   * Delegates to AIEngineService with multi-provider support
+   */
+  async chatWithInterviewer(
+    context: string,
+    message: string,
+    history: { role: string; content: string }[]
+  ): Promise<{ content: string; audioUrl?: string }> {
+    try {
+      this.logger.debug(
+        'Generating interviewer response using AI engine service'
+      );
+
+      const request: AIRequest = {
+        model: '', // Will be auto-selected based on scenario
+        prompt: message,
+        messages: [
+          {
+            role: 'system',
+            content: context,
+          },
+          ...history.map((h) => ({
+            role: h.role as 'user' | 'assistant',
+            content: h.content,
+          })),
+          {
+            role: 'user',
+            content: message,
+          },
+        ],
+        metadata: {
+          templateName: 'interviewer_chat',
+          templateVariables: {
+            context,
+            message,
+          },
+        },
+      };
+
+      const response = await this.aiEngineService.call(
+        request,
+        'chat',
+        'interview-chat'
+      );
+
+      return {
+        content: response.content,
+      };
+    } catch (error) {
+      this.logger.error('Failed to generate interviewer response:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generic generation method
+   */
+  async generate(
+    prompt: string,
+    options?: { temperature?: number; maxTokens?: number }
+  ): Promise<string> {
+    try {
+      const request: AIRequest = {
+        model: '',
+        prompt,
+        temperature: options?.temperature,
+        maxTokens: options?.maxTokens,
+        metadata: {
+          templateName: 'generic_generate',
+        },
+      };
+
+      const response = await this.aiEngineService.call(
+        request,
+        'chat',
+        'generic-generation'
+      );
+
+      return response.content;
+    } catch (error) {
+      this.logger.error('Failed to generate content:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Clear cache (delegated to AIEngineService)
    */
   async clearCache(_cacheKey: string): Promise<void> {

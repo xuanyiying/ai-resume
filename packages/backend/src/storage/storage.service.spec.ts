@@ -38,7 +38,9 @@ describe('StorageService', () => {
 
   beforeEach(async () => {
     // Mock OssFactory.getInstance before creating the module
-    jest.spyOn(OssFactory, 'getInstance').mockReturnValue(mockOssService as any);
+    jest
+      .spyOn(OssFactory, 'getInstance')
+      .mockReturnValue(mockOssService as any);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

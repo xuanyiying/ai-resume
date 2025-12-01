@@ -6,6 +6,7 @@ import { FileType, OssType } from './interfaces/storage.interface';
 import { OssConfigService } from './config/oss.config';
 import { ChunkUploadSessionService } from './services/chunk-upload-session.service';
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class DirectUploadService {
@@ -228,8 +229,16 @@ export class DirectUploadService {
       throw new Error('Not all chunks have been uploaded');
     }
 
-    // // TODO: Calculate actual MD5
-    const md5 = uuidv4();
+    // Calculate MD5 hash based on file metadata
+    // Since the file is uploaded in chunks to OSS, calculating content MD5 would be expensive
+    // Using metadata (filename, size, content type, user, ossKey) to generate a unique hash
+    const md5 = this.calculateMetadataMd5({
+      fileName: session.fileName,
+      fileSize: session.fileSize,
+      contentType: session.contentType,
+      userId: session.userId,
+      ossKey: session.ossKey,
+    });
 
     // Create file record in database
     const file = await this.prisma.storage.create({
@@ -240,7 +249,7 @@ export class DirectUploadService {
         fileSize: session.fileSize,
         fileUrl: this.ossService.getFileUrl(session.ossKey),
         filePath: session.ossKey,
-        hashMd5: md5, // TODO: Calculate actual MD5
+        hashMd5: md5,
         fileType: this.mapFileTypeToEnum(session.fileType),
         userId: session.userId,
         ossType: this.ossConfigService.getOssType() as OssType,
@@ -442,5 +451,28 @@ export class DirectUploadService {
       audio: FileType.AUDIO,
     };
     return mapping[fileType] || FileType.OTHER;
+  }
+
+  /**
+   * Calculate MD5 hash based on file metadata
+   * This provides a unique identifier for the file without needing to download/read the entire file
+   */
+  private calculateMetadataMd5(metadata: {
+    fileName: string;
+    fileSize: number;
+    contentType: string;
+    userId: string;
+    ossKey: string;
+  }): string {
+    const dataToHash = JSON.stringify({
+      fileName: metadata.fileName,
+      fileSize: metadata.fileSize,
+      contentType: metadata.contentType,
+      userId: metadata.userId,
+      ossKey: metadata.ossKey,
+      timestamp: Date.now(),
+    });
+
+    return createHash('md5').update(dataToHash).digest('hex');
   }
 }

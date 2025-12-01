@@ -8,15 +8,19 @@
     "packages/backend"
   ],
   "scripts": {
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "dev:backend": "pnpm run dev --filter=@resume-optimizer/backend",
-    "dev:frontend": "pnpm run dev --filter=@resume-optimizer/frontend",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' concurrently -n backend,frontend -c blue,green \"pnpm --filter=@resume-optimizer/backend start:dev\" \"pnpm --filter=@resume-optimizer/frontend start:dev\"",
+    "dev:backend": "NODE_OPTIONS='--max-old-space-size=2048' pnpm --filter=@resume-optimizer/backend start:dev",
+    "dev:frontend": "NODE_OPTIONS='--max-old-space-size=2048' pnpm --filter=@resume-optimizer/frontend start:dev",
+    "dev:turbo": "turbo run dev --no-cache --concurrency=2",
     "build": "turbo run build",
-    "build:backend": "pnpm run build --filter=@resume-optimizer/backend",
-    "build:frontend": "pnpm run build --filter=@resume-optimizer/frontend",
-    "test": "pnpm run test --recursive",
-    "lint": "pnpm run lint --recursive",
+    "build:backend": "pnpm --filter=@resume-optimizer/backend build",
+    "build:frontend": "pnpm --filter=@resume-optimizer/frontend build",
+    "test": "turbo run test",
+    "test:parallel": "pnpm run test --recursive --parallel",
+    "lint": "turbo run lint",
+    "lint:fix": "pnpm run lint --recursive --fix",
     "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
     "deploy": "bash scripts/deploy.sh"
   },
   "devDependencies": {

@@ -15,8 +15,8 @@ export class InvitationService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
-  ) { }
+    private readonly redis: RedisService
+  ) {}
 
   /**
    * Generate invitation codes and store in Redis
@@ -37,10 +37,10 @@ export class InvitationService {
 
         if (attempts >= maxAttempts) {
           this.logger.error(
-            `Failed to generate unique code after ${maxAttempts} attempts`,
+            `Failed to generate unique code after ${maxAttempts} attempts`
           );
           throw new BadRequestException(
-            'Failed to generate unique invitation code',
+            'Failed to generate unique invitation code'
           );
         }
       } while (await this.redis.exists(`invitation:code:${code}`));
@@ -62,7 +62,10 @@ export class InvitationService {
 
     // Async database write for audit trail (non-blocking)
     this.writeToAuditTrail(codes, createdBy, timestamp).catch((error) => {
-      this.logger.error('Failed to write invitation codes to audit trail', error);
+      this.logger.error(
+        'Failed to write invitation codes to audit trail',
+        error
+      );
     });
 
     return { count: codes.length, codes };
@@ -122,7 +125,10 @@ export class InvitationService {
 
     // Async database update for audit trail (non-blocking)
     this.updateAuditTrail(code, userId, usedAt).catch((error) => {
-      this.logger.error('Failed to update invitation code in audit trail', error);
+      this.logger.error(
+        'Failed to update invitation code in audit trail',
+        error
+      );
     });
 
     return {
@@ -139,7 +145,7 @@ export class InvitationService {
   private async writeToAuditTrail(
     codes: string[],
     createdBy: string,
-    createdAt: string,
+    createdAt: string
   ): Promise<void> {
     const data = codes.map((code) => ({
       code,
@@ -159,7 +165,7 @@ export class InvitationService {
   private async updateAuditTrail(
     code: string,
     userId: string,
-    usedAt: string,
+    usedAt: string
   ): Promise<void> {
     await this.prisma.invitationCode.update({
       where: { code },

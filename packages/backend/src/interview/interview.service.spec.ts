@@ -3,7 +3,15 @@ import { InterviewService } from './interview.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIEngine } from '../ai/ai.engine';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
-import { QuestionType, Difficulty } from '@prisma/client';
+import {
+  QuestionType,
+  Difficulty,
+  InterviewStatus,
+  MessageRole,
+} from '@prisma/client';
+import { CreateSessionDto } from './dto/create-session.dto';
+import { SendMessageDto } from './dto/send-message.dto';
+import { EndSessionDto } from './dto/end-session.dto';
 
 describe('InterviewService', () => {
   let service: InterviewService;
@@ -127,12 +135,22 @@ describe('InterviewService', () => {
               create: jest.fn(),
               findMany: jest.fn(),
             },
+            interviewSession: {
+              create: jest.fn(),
+              findUnique: jest.fn(),
+              update: jest.fn(),
+            },
+            interviewMessage: {
+              create: jest.fn(),
+            },
           },
         },
         {
           provide: AIEngine,
           useValue: {
             generateInterviewQuestions: jest.fn(),
+            chatWithInterviewer: jest.fn(),
+            generate: jest.fn(),
           },
         },
       ],
@@ -533,6 +551,145 @@ describe('InterviewService', () => {
         expect(Array.isArray(question.tips)).toBe(true);
         expect(question.difficulty).toBeDefined();
       });
+    });
+  });
+  describe('startSession', () => {
+    it('should start a new interview session', async () => {
+      const createSessionDto: CreateSessionDto = {
+        optimizationId: mockOptimizationId,
+      };
+      const mockSession = {
+        id: 'session-123',
+        userId: mockUserId,
+        optimizationId: mockOptimizationId,
+        status: InterviewStatus.IN_PROGRESS,
+        createdAt: new Date(),
+      };
+
+      jest
+        .spyOn(prismaService.optimization, 'findUnique')
+        .mockResolvedValue(mockOptimization as any);
+
+      jest
+        .spyOn(prismaService.interviewSession, 'create')
+        .mockResolvedValue(mockSession as any);
+
+      const result = await service.startSession(mockUserId, createSessionDto);
+
+      expect(result).toEqual(mockSession);
+      expect(prismaService.interviewSession.create).toHaveBeenCalledWith({
+        data: {
+          userId: mockUserId,
+          optimizationId: mockOptimizationId,
+          status: InterviewStatus.IN_PROGRESS,
+        },
+      });
+    });
+  });
+
+  describe('handleMessage', () => {
+    it('should handle user message and generate AI response', async () => {
+      const sessionId = 'session-123';
+      const sendMessageDto: SendMessageDto = { content: 'Hello' };
+      const mockSession = {
+        id: sessionId,
+        userId: mockUserId,
+        status: InterviewStatus.IN_PROGRESS,
+        optimization: mockOptimization,
+        messages: [],
+      };
+
+      const mockUserMessage = {
+        id: 'msg-1',
+        sessionId,
+        role: MessageRole.USER,
+        content: 'Hello',
+        createdAt: new Date(),
+      };
+
+      const mockAiResponse = {
+        content: 'Hi there',
+        audioUrl: 'http://example.com/audio.mp3',
+      };
+
+      const mockAiMessage = {
+        id: 'msg-2',
+        sessionId,
+        role: MessageRole.ASSISTANT,
+        content: 'Hi there',
+        audioUrl: 'http://example.com/audio.mp3',
+        createdAt: new Date(),
+      };
+
+      jest
+        .spyOn(prismaService.interviewSession, 'findUnique')
+        .mockResolvedValue(mockSession as any);
+
+      jest
+        .spyOn(prismaService.interviewMessage, 'create')
+        .mockResolvedValueOnce(mockUserMessage as any)
+        .mockResolvedValueOnce(mockAiMessage as any);
+
+      jest
+        .spyOn(aiEngine, 'chatWithInterviewer')
+        .mockResolvedValue(mockAiResponse);
+
+      const result = await service.handleMessage(
+        mockUserId,
+        sessionId,
+        sendMessageDto
+      );
+
+      expect(result.userMessage).toEqual(mockUserMessage);
+      expect(result.aiMessage).toEqual(mockAiMessage);
+      expect(aiEngine.chatWithInterviewer).toHaveBeenCalled();
+    });
+  });
+
+  describe('endSession', () => {
+    it('should end interview session and trigger feedback generation', async () => {
+      const sessionId = 'session-123';
+      const endSessionDto: EndSessionDto = { sessionId };
+      const mockSession = {
+        id: sessionId,
+        userId: mockUserId,
+        status: InterviewStatus.IN_PROGRESS,
+      };
+
+      const mockCompletedSession = {
+        ...mockSession,
+        status: InterviewStatus.COMPLETED,
+        endTime: new Date(),
+        messages: [],
+        optimization: mockOptimization,
+      };
+
+      jest
+        .spyOn(prismaService.interviewSession, 'findUnique')
+        .mockResolvedValue(mockSession as any);
+
+      jest
+        .spyOn(prismaService.interviewSession, 'update')
+        .mockResolvedValue(mockCompletedSession as any);
+
+      jest.spyOn(aiEngine, 'generate').mockResolvedValue(
+        JSON.stringify({
+          score: 85,
+          feedback: 'Good job',
+        })
+      );
+
+      const result = await service.endSession(mockUserId, endSessionDto);
+
+      expect(result).toEqual(mockCompletedSession);
+      expect(prismaService.interviewSession.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: sessionId },
+          data: expect.objectContaining({
+            status: InterviewStatus.COMPLETED,
+          }),
+        })
+      );
     });
   });
 });

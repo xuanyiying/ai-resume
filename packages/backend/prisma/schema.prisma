@@ -54,6 +54,7 @@ model User {
     messages       Message[]
     invitationCode InvitationCode?
     storages       Storage[]
+    interviewSessions InterviewSession[]
 
     @@index([email])
     @@map("users")
@@ -134,6 +135,7 @@ model Optimization {
     job                Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
     generatedPdfs      GeneratedPDF[]
     interviewQuestions InterviewQuestion[]
+    interviewSessions  InterviewSession[]
 
     @@index([userId])
     @@index([resumeId])
@@ -515,4 +517,49 @@ model Storage {
     @@index([fileType])
     @@index([hashMd5])
     @@map("storages")
+}
+
+// Interview Session model
+model InterviewSession {
+    id             String          @id @default(uuid())
+    userId         String
+    optimizationId String
+    status         InterviewStatus @default(IN_PROGRESS)
+    startTime      DateTime        @default(now())
+    endTime        DateTime?
+    score          Int?
+    feedback       String?         @db.Text
+    createdAt      DateTime        @default(now())
+    updatedAt      DateTime        @updatedAt
+
+    // Relations
+    user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    optimization Optimization      @relation(fields: [optimizationId], references: [id], onDelete: Cascade)
+    messages     InterviewMessage[]
+
+    @@index([userId])
+    @@index([optimizationId])
+    @@map("interview_sessions")
+}
+
+// Interview Message model
+model InterviewMessage {
+    id        String      @id @default(uuid())
+    sessionId String
+    role      MessageRole // USER or ASSISTANT
+    content   String      @db.Text
+    audioUrl  String?
+    createdAt DateTime    @default(now())
+
+    // Relations
+    session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+    @@index([sessionId])
+    @@map("interview_messages")
+}
+
+enum InterviewStatus {
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
 }

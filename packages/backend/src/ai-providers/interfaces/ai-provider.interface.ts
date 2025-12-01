@@ -17,6 +17,7 @@ export interface AIRequest {
   topK?: number;
   stopSequences?: string[];
   systemPrompt?: string;
+  messages?: { role: 'system' | 'user' | 'assistant'; content: string }[];
   metadata?: Record<string, unknown>;
 }
 
