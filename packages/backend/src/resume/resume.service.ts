@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { StorageService } from '@/storage/storage.service';
 import { FileType } from '@/storage/interfaces/storage.interface';
+import { AIQueueService } from '@/ai/queue/ai-queue.service';
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -28,8 +29,9 @@ export class ResumeService {
   constructor(
     private prisma: PrismaService,
     private aiEngine: AIEngine,
-    private storageService: StorageService
-  ) {}
+    private storageService: StorageService,
+    private aiQueueService: AIQueueService
+  ) { }
 
   /**
    * Upload a resume file for a user
@@ -208,6 +210,11 @@ export class ResumeService {
    * Extracts text from file and uses AI engine to parse structured data
    * Caches results for performance optimization (Requirement 10.1, 10.3)
    */
+  /**
+   * Parse resume file content
+   * Extracts text from file and uses AI engine to parse structured data
+   * Uses Queue for rate limiting and resilience
+   */
   async parseResume(resumeId: string, userId: string): Promise<any> {
     const resume = await this.getResume(resumeId, userId);
 
@@ -238,19 +245,24 @@ export class ResumeService {
         fileType
       );
 
-      // Parse content using AI engine (with multi-provider support)
-      const parsedData = await this.aiEngine.parseResumeContent(textContent);
+      // Add to queue
+      const job = await this.aiQueueService.addResumeParsingJob(
+        resumeId,
+        userId,
+        textContent
+      );
 
-      // Update resume with parsed data
-      const updatedResume = await this.prisma.resume.update({
-        where: { id: resumeId },
-        data: {
-          parsedData: parsedData as any,
-          parseStatus: ParseStatus.COMPLETED,
-        },
-      });
-
-      return updatedResume.parsedData;
+      // Wait for job completion (up to 30 seconds)
+      // This preserves the synchronous API feel for fast operations
+      try {
+        const result = await job.finished();
+        return result;
+      } catch (error) {
+        // If waiting times out or job fails, we still return the current status
+        // The frontend can poll for updates if needed
+        this.logger.log(`Job ${job.id} queued but not finished immediately: ${error}`);
+        return { message: 'Processing started', jobId: job.id };
+      }
     } catch (error) {
       this.logger.error(`Error parsing resume ${resumeId}:`, error);
 
