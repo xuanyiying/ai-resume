@@ -13,7 +13,6 @@ import * as fc from 'fast-check';
 
 describe('ModelConfigService', () => {
   let service: ModelConfigService;
-  let configService: ConfigService;
   let prismaService: PrismaService;
   let yamlLoader: YamlConfigLoader;
 
@@ -52,7 +51,6 @@ describe('ModelConfigService', () => {
     }).compile();
 
     service = module.get<ModelConfigService>(ModelConfigService);
-    configService = module.get<ConfigService>(ConfigService);
     prismaService = module.get<PrismaService>(PrismaService);
     yamlLoader = module.get<YamlConfigLoader>(YamlConfigLoader);
   });

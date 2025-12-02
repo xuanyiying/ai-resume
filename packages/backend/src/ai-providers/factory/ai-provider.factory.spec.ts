@@ -6,15 +6,13 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AIProviderFactory, ProviderStatus } from './ai-provider.factory';
+import { ConfigModule } from '@nestjs/config';
+import { AIProviderFactory } from './ai-provider.factory';
 import { ProviderConfigService } from '../config/provider.config';
-import { AIProvider } from '../interfaces';
-import { AIError, AIErrorCode } from '../utils/ai-error';
+import { AIError } from '../utils/ai-error';
 
 describe('AIProviderFactory', () => {
   let factory: AIProviderFactory;
-  let providerConfigService: ProviderConfigService;
   let module: TestingModule;
 
   beforeEach(async () => {
@@ -23,10 +21,10 @@ describe('AIProviderFactory', () => {
       providers: [ProviderConfigService, AIProviderFactory],
     }).compile();
 
-    providerConfigService = module.get<ProviderConfigService>(
-      ProviderConfigService
-    );
     factory = module.get<AIProviderFactory>(AIProviderFactory);
+
+    // Initialize the factory
+    await factory.onModuleInit();
   });
 
   afterEach(async () => {
@@ -216,25 +214,30 @@ describe('AIProviderFactory', () => {
 
   describe('Provider Reloading', () => {
     it('should reload providers', async () => {
-      const providersBefore = factory.getProviderNames();
+      const initialCount = factory.getProviderNames().length;
 
       await factory.reloadProviders();
 
       const providersAfter = factory.getProviderNames();
 
       // Should have same providers after reload
-      expect(providersAfter.length).toBe(providersBefore.length);
+      expect(providersAfter.length).toBe(initialCount);
     });
 
     it('should clear and reinitialize providers on reload', async () => {
+      // Get initial provider count
+      const initialProviderCount = factory.getProviderNames().length;
       const statusesBefore = factory.getAllProviderStatuses();
 
+      // Reload providers
       await factory.reloadProviders();
 
       const statusesAfter = factory.getAllProviderStatuses();
+      const providersAfter = factory.getProviderNames();
 
-      // Should have same number of statuses
+      // Should have same number of statuses and providers after reload
       expect(statusesAfter.length).toBe(statusesBefore.length);
+      expect(providersAfter.length).toBe(initialProviderCount);
     });
 
     it('should perform health checks after reload', async () => {
@@ -288,8 +291,6 @@ describe('AIProviderFactory', () => {
 
   describe('Property 3: Dynamic Configuration Update', () => {
     it('should reload providers when configuration changes', async () => {
-      const providersBefore = factory.getProviderNames();
-
       // Reload providers (simulating configuration change)
       await factory.reloadProviders();
 
@@ -321,8 +322,6 @@ describe('AIProviderFactory', () => {
     });
 
     it('should support dynamic provider list updates', async () => {
-      const initialProviders = factory.getProviderNames();
-
       // Reload should support dynamic updates
       await factory.reloadProviders();
 

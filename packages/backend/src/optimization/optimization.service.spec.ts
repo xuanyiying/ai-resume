@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OptimizationService, MatchScore } from './optimization.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIEngine } from '../ai/ai.engine';
+import { QuotaService } from '../quota/quota.service';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import * as fc from 'fast-check';
 import { ParsedJobData, ParsedResumeData } from '@/types';
@@ -29,6 +30,11 @@ describe('OptimizationService', () => {
     generateOptimizationSuggestions: jest.fn(),
   };
 
+  const mockQuotaService = {
+    enforceOptimizationQuota: jest.fn(),
+    incrementOptimizationCount: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -40,6 +46,10 @@ describe('OptimizationService', () => {
         {
           provide: AIEngine,
           useValue: mockAIEngine,
+        },
+        {
+          provide: QuotaService,
+          useValue: mockQuotaService,
         },
       ],
     }).compile();

@@ -31,7 +31,7 @@ export class ResumeService {
     private aiEngine: AIEngine,
     private storageService: StorageService,
     private aiQueueService: AIQueueService
-  ) { }
+  ) {}
 
   /**
    * Upload a resume file for a user
@@ -260,7 +260,9 @@ export class ResumeService {
       } catch (error) {
         // If waiting times out or job fails, we still return the current status
         // The frontend can poll for updates if needed
-        this.logger.log(`Job ${job.id} queued but not finished immediately: ${error}`);
+        this.logger.log(
+          `Job ${job.id} queued but not finished immediately: ${error}`
+        );
         return { message: 'Processing started', jobId: job.id };
       }
     } catch (error) {

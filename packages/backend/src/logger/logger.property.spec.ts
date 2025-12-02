@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import * as winston from 'winston';
 import { ErrorLoggerService } from './error-logger.service';
-import { loggerConfig } from './logger.config';
 import * as fc from 'fast-check';
 
 /**

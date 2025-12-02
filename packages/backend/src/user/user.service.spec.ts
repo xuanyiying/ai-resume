@@ -10,6 +10,7 @@ import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { EmailService } from '@/email/email.service';
+import { InvitationService } from '@/invitation/invitation.service';
 
 jest.mock('bcryptjs');
 
@@ -17,7 +18,6 @@ describe('UserService', () => {
   let service: UserService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
-  let emailService: EmailService;
 
   const mockUser = {
     id: 'user-1',
@@ -77,7 +77,7 @@ describe('UserService', () => {
           },
         },
         {
-          provide: 'InvitationService',
+          provide: InvitationService,
           useValue: {
             validateCode: jest.fn().mockResolvedValue(true),
             markAsUsed: jest.fn(),
@@ -89,7 +89,6 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
-    emailService = module.get<EmailService>(EmailService);
   });
 
   afterEach(() => {

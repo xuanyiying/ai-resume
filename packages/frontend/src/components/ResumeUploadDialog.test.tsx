@@ -11,7 +11,7 @@ describe('ResumeUploadDialog Component', () => {
   const mockOnUploadSuccess = vi.fn();
 
   beforeEach(() => {
-    vi.clearAAIocks();
+    vi.clearAllMocks();
   });
 
   it('should render upload dialog when visible is true', () => {

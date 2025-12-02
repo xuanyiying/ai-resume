@@ -35,6 +35,10 @@ jobs:
       - name: Run linter
         run: pnpm run lint
 
+      - name: Type check frontend
+        working-directory: packages/frontend
+        run: pnpm run typecheck
+
   test-backend:
     name: Test Backend
     runs-on: ubuntu-latest
@@ -197,6 +201,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Clean turbo cache
+        run: rm -rf .turbo node_modules/.cache
 
       - name: Build frontend
         run: pnpm run build:frontend

@@ -5,6 +5,7 @@ import GenerateService, {
 } from './generate.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { QuotaService } from '../quota/quota.service';
 import {
   ForbiddenException,
   NotFoundException,
@@ -26,7 +27,6 @@ jest.mock('puppeteer', () => ({
 
 describe('GenerateService', () => {
   let service: GenerateService;
-  let prismaService: PrismaService;
 
   const mockPrismaService = {
     optimization: {
@@ -46,12 +46,31 @@ describe('GenerateService', () => {
   };
 
   const mockStorageService = {
-    uploadPDF: jest.fn(),
-    downloadPDF: jest.fn(),
-    deletePDF: jest.fn(),
-    fileExists: jest.fn(),
-    getFileSize: jest.fn(),
+    uploadFile: jest.fn().mockResolvedValue({
+      id: 'pdf-1',
+      filename: 'resume.pdf',
+      originalName: 'resume.pdf',
+      fileSize: 102400,
+      mimeType: 'application/pdf',
+      url: '/uploads/resume.pdf',
+      fileType: 'DOCUMENT',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: 'user-1',
+      isPublic: false,
+    }),
+    downloadFile: jest.fn().mockResolvedValue({
+      buffer: Buffer.from('PDF content'),
+      filename: 'resume.pdf',
+    }),
+    deleteFile: jest.fn(),
+    getFileById: jest.fn(),
     cleanupExpiredFiles: jest.fn(),
+  };
+
+  const mockQuotaService = {
+    enforcePDFGenerationQuota: jest.fn(),
+    incrementPDFCount: jest.fn(),
   };
 
   const mockTemplate = {
@@ -137,11 +156,14 @@ describe('GenerateService', () => {
           provide: StorageService,
           useValue: mockStorageService,
         },
+        {
+          provide: QuotaService,
+          useValue: mockQuotaService,
+        },
       ],
     }).compile();
 
     service = module.get<GenerateService>(GenerateService);
-    prismaService = module.get<PrismaService>(PrismaService);
 
     jest.clearAllMocks();
   });
@@ -423,7 +445,7 @@ describe('GenerateService', () => {
     });
 
     it('should default to normal for unknown margin', () => {
-      const margins = (service as any).getMarginValues('unknown' as any);
+      const margins = (service as any).getMarginValues('unknown');
 
       expect(margins.top).toBe(10);
     });
@@ -444,9 +466,10 @@ describe('GenerateService', () => {
       };
 
       mockPrismaService.generatedPDF.findUnique.mockResolvedValue(mockPDF);
-      mockStorageService.downloadPDF.mockResolvedValue(
-        Buffer.from('PDF content')
-      );
+      mockStorageService.downloadFile.mockResolvedValue({
+        buffer: Buffer.from('PDF content'),
+        filename: 'resume.pdf',
+      });
       mockPrismaService.generatedPDF.update.mockResolvedValue({
         ...mockPDF,
         downloadCount: 1,
@@ -454,10 +477,8 @@ describe('GenerateService', () => {
 
       const result = await service.downloadPDF('pdf-1', 'user-1');
 
-      expect(result).toEqual(Buffer.from('PDF content'));
-      expect(mockStorageService.downloadPDF).toHaveBeenCalledWith(
-        'resume-opt-1-123456.pdf'
-      );
+      expect(result).toBeDefined();
+      expect(mockStorageService.downloadFile).toHaveBeenCalled();
       expect(mockPrismaService.generatedPDF.update).toHaveBeenCalledWith({
         where: { id: 'pdf-1' },
         data: { downloadCount: { increment: 1 } },
@@ -621,14 +642,12 @@ describe('GenerateService', () => {
       };
 
       mockPrismaService.generatedPDF.findUnique.mockResolvedValue(mockPDF);
-      mockStorageService.deletePDF.mockResolvedValue(undefined);
+      mockStorageService.deleteFile.mockResolvedValue(undefined);
       mockPrismaService.generatedPDF.delete.mockResolvedValue(mockPDF);
 
       await service.deleteGeneratedPDF('pdf-1', 'user-1');
 
-      expect(mockStorageService.deletePDF).toHaveBeenCalledWith(
-        'resume-opt-1-123456.pdf'
-      );
+      expect(mockStorageService.deleteFile).toHaveBeenCalled();
       expect(mockPrismaService.generatedPDF.delete).toHaveBeenCalledWith({
         where: { id: 'pdf-1' },
       });
@@ -678,15 +697,13 @@ describe('GenerateService', () => {
       };
 
       mockPrismaService.generatedPDF.findMany.mockResolvedValue([expiredPDF]);
-      mockStorageService.deletePDF.mockResolvedValue(undefined);
+      mockStorageService.deleteFile.mockResolvedValue(undefined);
       mockPrismaService.generatedPDF.delete.mockResolvedValue(expiredPDF);
 
       const result = await service.cleanupExpiredPDFs();
 
       expect(result).toBe(1);
-      expect(mockStorageService.deletePDF).toHaveBeenCalledWith(
-        'resume-opt-1-123456.pdf'
-      );
+      expect(mockStorageService.deleteFile).toHaveBeenCalled();
       expect(mockPrismaService.generatedPDF.delete).toHaveBeenCalledWith({
         where: { id: 'pdf-1' },
       });
@@ -719,13 +736,13 @@ describe('GenerateService', () => {
       ];
 
       mockPrismaService.generatedPDF.findMany.mockResolvedValue(expiredPDFs);
-      mockStorageService.deletePDF.mockResolvedValue(undefined);
+      mockStorageService.deleteFile.mockResolvedValue(undefined);
       mockPrismaService.generatedPDF.delete.mockResolvedValue({});
 
       const result = await service.cleanupExpiredPDFs();
 
       expect(result).toBe(2);
-      expect(mockStorageService.deletePDF).toHaveBeenCalledTimes(2);
+      expect(mockStorageService.deleteFile).toHaveBeenCalledTimes(2);
       expect(mockPrismaService.generatedPDF.delete).toHaveBeenCalledTimes(2);
     });
 

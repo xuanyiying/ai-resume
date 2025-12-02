@@ -8,6 +8,8 @@ import { ParseStatus } from '@prisma/client';
 import { ResumeService } from './resume.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIEngine } from '../ai/ai.engine';
+import { StorageService } from '../storage/storage.service';
+import { AIQueueService } from '../ai/queue/ai-queue.service';
 import * as fs from 'fs';
 
 jest.mock('fs');
@@ -42,7 +44,7 @@ describe('ResumeService', () => {
     filename: 'resume.pdf',
     path: '/uploads/resume.pdf',
     buffer: Buffer.from('test'),
-  } as any;
+  } as Express.Multer.File;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,6 +70,43 @@ describe('ResumeService', () => {
             parseResumeContent: jest.fn(),
           },
         },
+        {
+          provide: StorageService,
+          useValue: {
+            uploadFile: jest.fn().mockResolvedValue({
+              id: 'file-1',
+              filename: 'resume.pdf',
+              originalName: 'resume.pdf',
+              fileSize: 1024000,
+              mimeType: 'application/pdf',
+              url: '/uploads/resume.pdf',
+              fileType: 'DOCUMENT',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              userId: 'user-1',
+              isPublic: false,
+            }),
+            deleteFile: jest.fn(),
+            getFile: jest.fn(),
+          },
+        },
+        {
+          provide: AIQueueService,
+          useValue: {
+            addJob: jest.fn(),
+            getJob: jest.fn(),
+            addResumeParsingJob: jest.fn().mockResolvedValue({
+              id: 'job-1',
+              finished: jest.fn().mockResolvedValue({
+                personalInfo: { name: 'John Doe', email: 'john@example.com' },
+                education: [],
+                experience: [],
+                skills: [],
+                projects: [],
+              }),
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -82,7 +121,7 @@ describe('ResumeService', () => {
   describe('uploadResume', () => {
     it('should upload a PDF file successfully', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+      (fs.writeFileSync as jest.Mock).mockImplementation(() => { });
       (prismaService.resume.create as jest.Mock).mockResolvedValue(mockResume);
 
       const result = await service.uploadResume(
@@ -105,7 +144,7 @@ describe('ResumeService', () => {
       };
 
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+      (fs.writeFileSync as jest.Mock).mockImplementation(() => { });
       (prismaService.resume.create as jest.Mock).mockResolvedValue({
         ...mockResume,
         fileType: 'docx',
@@ -124,7 +163,7 @@ describe('ResumeService', () => {
       };
 
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+      (fs.writeFileSync as jest.Mock).mockImplementation(() => { });
       (prismaService.resume.create as jest.Mock).mockResolvedValue({
         ...mockResume,
         fileType: 'txt',
@@ -136,9 +175,9 @@ describe('ResumeService', () => {
     });
 
     it('should throw BadRequestException if no file provided', async () => {
-      await expect(service.uploadResume('user-1', null as any)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(
+        service.uploadResume('user-1', null as unknown)
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if file exceeds size limit', async () => {
@@ -176,15 +215,13 @@ describe('ResumeService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should create uploads directory if it does not exist', async () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-      (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+    it('should upload resume using storage service', async () => {
       (prismaService.resume.create as jest.Mock).mockResolvedValue(mockResume);
 
-      await service.uploadResume('user-1', mockFile);
+      const result = await service.uploadResume('user-1', mockFile);
 
-      expect(fs.mkdirSync).toHaveBeenCalled();
+      expect(result.id).toBe('resume-1');
+      expect(prismaService.resume.create).toHaveBeenCalled();
     });
   });
 
@@ -294,7 +331,7 @@ describe('ResumeService', () => {
         mockResume
       );
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.unlinkSync as jest.Mock).mockImplementation(() => {});
+      (fs.unlinkSync as jest.Mock).mockImplementation(() => { });
       (prismaService.resume.delete as jest.Mock).mockResolvedValue(mockResume);
 
       await service.deleteResume('resume-1', 'user-1');
@@ -393,6 +430,7 @@ describe('ResumeService', () => {
       };
 
       const aiEngine = service['aiEngine'];
+      const aiQueueService = service['aiQueueService'];
 
       (prismaService.resume.findUnique as jest.Mock).mockResolvedValue(
         mockResume
@@ -402,24 +440,31 @@ describe('ResumeService', () => {
         Buffer.from('test content')
       );
       (aiEngine.extractTextFromFile as jest.Mock).mockResolvedValue(
-        'John Doe\njohn@example.com'
+        'John Doe\\njohn@example.com'
       );
-      (aiEngine.parseResumeContent as jest.Mock).mockResolvedValue(parsedData);
+      (aiQueueService.addResumeParsingJob as jest.Mock).mockResolvedValue({
+        id: 'job-1',
+        finished: jest.fn().mockResolvedValue(parsedData),
+      });
       (prismaService.resume.update as jest.Mock).mockResolvedValue({
         ...mockResume,
-        parsedData,
-        parseStatus: ParseStatus.COMPLETED,
+        parseStatus: ParseStatus.PROCESSING,
       });
 
       const result = await service.parseResume('resume-1', 'user-1');
 
       expect(result).toEqual(parsedData);
+      expect(aiQueueService.addResumeParsingJob).toHaveBeenCalledWith(
+        'resume-1',
+        'user-1',
+        'John Doe\\njohn@example.com'
+      );
+      // Verify status was updated to PROCESSING when job started
       expect(prismaService.resume.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'resume-1' },
           data: expect.objectContaining({
-            parsedData,
-            parseStatus: ParseStatus.COMPLETED,
+            parseStatus: ParseStatus.PROCESSING,
           }),
         })
       );
