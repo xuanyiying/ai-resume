@@ -72,31 +72,5 @@ certbot/
 # Docker volumes
 postgres_data/
 redis_data/
-/.turbo/cache/0edcdc3b9c1c8ad7.tar.zst
-/.turbo/cache/0edcdc3b9c1c8ad7-meta.json
-/.turbo/cache/5de2f74de5713a3e.tar.zst
-/.turbo/cache/5de2f74de5713a3e-meta.json
-/.turbo/cache/7e8acb017025005b.tar.zst
-/.turbo/cache/7e8acb017025005b-meta.json
-/.turbo/cache/8f3af02b45d94449.tar.zst
-/.turbo/cache/8f3af02b45d94449-meta.json
-/.turbo/cache/630b8c2b35f43270.tar.zst
-/.turbo/cache/630b8c2b35f43270-meta.json
-/.turbo/cache/848637b1225292cf.tar.zst
-/.turbo/cache/848637b1225292cf-meta.json
-/.turbo/cache/2276745704f7d6dc.tar.zst
-/.turbo/cache/2276745704f7d6dc-meta.json
-/.turbo/cookies/1.cookie
-/.turbo/cookies/2.cookie
-/.turbo/cookies/3.cookie
-/.turbo/cookies/4.cookie
-/.turbo/cookies/5.cookie
-/.turbo/cookies/6.cookie
-/.turbo/cookies/7.cookie
-/.turbo/cookies/8.cookie
-/.turbo/cookies/9.cookie
-/.turbo/cookies/10.cookie
-/.turbo/cookies/11.cookie
-/.turbo/cookies/12.cookie
-/.turbo/cookies/13.cookie
-/.turbo/daemon/a5d1f27d6a01cbec-turbo.log.2025-11-30
+# Turborepo
+.turbo/
