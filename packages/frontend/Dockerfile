@@ -2,7 +2,7 @@
 FROM node:18-alpine AS pruner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 COPY . .
 RUN pnpm dlx turbo prune --scope=@resume-optimizer/frontend --docker
 
