@@ -124,7 +124,9 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 # 加载环境变量
-export $(cat $ENV_FILE | grep -v '^#' | xargs)
+set -a
+source "$ENV_FILE"
+set +a
 
 print_step "步骤 1: 环境检查"
 

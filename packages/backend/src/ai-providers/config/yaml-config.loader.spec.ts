@@ -6,8 +6,6 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { YamlConfigLoader } from './yaml-config.loader';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as fc from 'fast-check';
 
 describe('YamlConfigLoader', () => {

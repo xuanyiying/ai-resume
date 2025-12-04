@@ -5,8 +5,8 @@
  */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { AIProvider, ProviderConfigMap } from '../interfaces';
-import { ProviderConfigService } from '../config/provider.config';
+import { AIProvider } from '../interfaces';
+import { ModelConfigService } from '../config/model-config.service';
 import { QwenProvider } from '../providers/qwen.provider';
 import { OllamaProvider } from '../providers/ollama.provider';
 import { OpenAIProvider } from '../providers/openai.provider';
@@ -18,6 +18,7 @@ import {
   OpenAIConfig,
   DeepSeekConfig,
   GeminiConfig,
+  ModelConfig,
 } from '../interfaces/model-config.interface';
 import { AIError, AIErrorCode } from '../utils/ai-error';
 
@@ -44,7 +45,7 @@ export class AIProviderFactory implements OnModuleInit {
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
   private readonly healthCheckIntervalMs: number = 60000; // 1 minute
 
-  constructor(private providerConfigService: ProviderConfigService) {}
+  constructor(private modelConfigService: ModelConfigService) {}
 
   /**
    * Initialize factory on module startup
@@ -79,8 +80,19 @@ export class AIProviderFactory implements OnModuleInit {
    * Validates: Requirements 1.6
    */
   private async loadAllProviders(): Promise<void> {
-    const configuredProviders =
-      this.providerConfigService.getConfiguredProviders();
+    const allConfigs = await this.modelConfigService.getAllModelConfigs();
+
+    // Group configs by provider
+    const providerGroups = new Map<string, ModelConfig[]>();
+    for (const config of allConfigs) {
+      if (!config.isActive) continue;
+
+      const existing = providerGroups.get(config.provider) || [];
+      existing.push(config);
+      providerGroups.set(config.provider, existing);
+    }
+
+    const configuredProviders = Array.from(providerGroups.keys());
 
     this.logger.log(
       `Loading ${configuredProviders.length} configured providers: ${configuredProviders.join(', ')}`
@@ -88,7 +100,10 @@ export class AIProviderFactory implements OnModuleInit {
 
     for (const providerName of configuredProviders) {
       try {
-        const provider = await this.createProvider(providerName);
+        const provider = await this.createProvider(
+          providerName,
+          providerGroups.get(providerName)?.[0]
+        );
 
         if (provider) {
           this.providers.set(providerName, provider);
@@ -120,34 +135,52 @@ export class AIProviderFactory implements OnModuleInit {
    * Validates: Requirements 1.6, 3.3
    */
   private async createProvider(
-    providerName: string
+    providerName: string,
+    modelConfig?: ModelConfig
   ): Promise<AIProvider | null> {
-    const config = this.providerConfigService.getProviderConfig(
-      providerName as keyof ProviderConfigMap
-    );
+    if (!modelConfig) {
+      const configs =
+        await this.modelConfigService.getConfigsByProvider(providerName);
+      modelConfig = configs.find((c) => c.isActive);
+    }
 
-    if (!config || !config.isActive) {
+    if (!modelConfig) {
       this.logger.warn(
         `Provider ${providerName} is not configured or inactive`
       );
       return null;
     }
 
+    // Convert ModelConfig to specific provider config
+    // Note: ModelConfig doesn't have all fields like 'organization' or 'timeout',
+    // so we use defaults or undefined.
+    const baseConfig = {
+      apiKey: modelConfig.apiKey,
+      endpoint: modelConfig.endpoint,
+      defaultTemperature: modelConfig.defaultTemperature,
+      defaultMaxTokens: modelConfig.defaultMaxTokens,
+      timeout: 30000, // Default timeout
+      isActive: modelConfig.isActive,
+    };
+
     switch (providerName) {
       case 'qwen':
-        return new QwenProvider(config as QwenConfig);
+        return new QwenProvider(baseConfig as QwenConfig);
 
       case 'ollama':
-        return new OllamaProvider(config as OllamaConfig);
+        return new OllamaProvider({
+          ...baseConfig,
+          baseUrl: modelConfig.endpoint, // Map endpoint to baseUrl for Ollama
+        } as OllamaConfig);
 
       case 'openai':
-        return new OpenAIProvider(config as OpenAIConfig);
+        return new OpenAIProvider(baseConfig as OpenAIConfig);
 
       case 'deepseek':
-        return new DeepSeekProvider(config as DeepSeekConfig);
+        return new DeepSeekProvider(baseConfig as DeepSeekConfig);
 
       case 'gemini':
-        return new GeminiProvider(config as GeminiConfig);
+        return new GeminiProvider(baseConfig as GeminiConfig);
 
       default:
         throw new Error(`Unknown provider: ${providerName}`);

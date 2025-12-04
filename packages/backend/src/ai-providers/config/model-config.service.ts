@@ -48,28 +48,17 @@ export class ModelConfigService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.loadConfigurations();
-    await this.validateConnections();
   }
 
   /**
-   * Load configurations from all sources
+   * Load configurations from database
+   * All configurations are now stored in database for dynamic management
    */
   private async loadConfigurations(): Promise<void> {
-    this.logger.log('Loading model configurations...');
+    this.logger.log('Loading model configurations from database...');
 
     try {
-      // Load from database first
       await this.loadFromDatabase();
-
-      // Load from YAML file if specified
-      const yamlPath = this.configService.get<string>('AI_CONFIG_YAML_PATH');
-      if (yamlPath) {
-        await this.loadFromYaml(yamlPath);
-      }
-
-      // Load from environment variables (overrides database and YAML)
-      await this.loadFromEnvironment();
-
       this.logger.log(`Loaded ${this.configCache.size} model configurations`);
     } catch (error) {
       this.logger.error(
@@ -98,134 +87,6 @@ export class ModelConfigService implements OnModuleInit {
       this.logger.warn(
         `Failed to load configurations from database: ${error instanceof Error ? error.message : String(error)}`
       );
-    }
-  }
-
-  /**
-   * Load configurations from YAML file
-   */
-  private async loadFromYaml(filePath: string): Promise<void> {
-    try {
-      const yamlConfig = this.yamlLoader.loadFromFile(filePath);
-
-      if (!yamlConfig || !this.yamlLoader.validateConfig(yamlConfig)) {
-        this.logger.warn('Invalid YAML configuration');
-        return;
-      }
-
-      const providerConfigs =
-        this.yamlLoader.convertToProviderConfigMap(yamlConfig);
-
-      for (const [provider, config] of Object.entries(providerConfigs)) {
-        if (config && config.apiKey) {
-          const modelConfig: ModelConfig = {
-            id: `yaml-${provider}-${Date.now()}`,
-            name: `${provider}-yaml`,
-            provider,
-            apiKey: config.apiKey,
-            endpoint: config.endpoint,
-            defaultTemperature: config.defaultTemperature || 0.7,
-            defaultMaxTokens: config.defaultMaxTokens || 2000,
-            costPerInputToken: 0,
-            costPerOutputToken: 0,
-            rateLimitPerMinute: 0,
-            rateLimitPerDay: 0,
-            isActive: config.isActive !== false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-
-          this.configCache.set(modelConfig.name, modelConfig);
-          this.cacheTimestamps.set(modelConfig.name, Date.now());
-        }
-      }
-
-      this.logger.log('Loaded configurations from YAML file');
-    } catch (error) {
-      this.logger.warn(
-        `Failed to load configurations from YAML: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  }
-
-  /**
-   * Load configurations from environment variables
-   */
-  private async loadFromEnvironment(): Promise<void> {
-    const providers = ['openai', 'qwen', 'deepseek', 'gemini', 'ollama'];
-
-    for (const provider of providers) {
-      const apiKeyEnv = `${provider.toUpperCase()}_API_KEY`;
-      const apiKey = this.configService.get<string>(apiKeyEnv);
-
-      if (apiKey) {
-        const modelConfig: ModelConfig = {
-          id: `env-${provider}-${Date.now()}`,
-          name: `${provider}-env`,
-          provider,
-          apiKey,
-          endpoint: this.configService.get<string>(
-            `${provider.toUpperCase()}_ENDPOINT`
-          ),
-          defaultTemperature: this.configService.get<number>(
-            `${provider.toUpperCase()}_DEFAULT_TEMPERATURE`,
-            0.7
-          ),
-          defaultMaxTokens: this.configService.get<number>(
-            `${provider.toUpperCase()}_DEFAULT_MAX_TOKENS`,
-            2000
-          ),
-          costPerInputToken: this.configService.get<number>(
-            `${provider.toUpperCase()}_COST_PER_INPUT_TOKEN`,
-            0
-          ),
-          costPerOutputToken: this.configService.get<number>(
-            `${provider.toUpperCase()}_COST_PER_OUTPUT_TOKEN`,
-            0
-          ),
-          rateLimitPerMinute: this.configService.get<number>(
-            `${provider.toUpperCase()}_RATE_LIMIT_PER_MINUTE`,
-            0
-          ),
-          rateLimitPerDay: this.configService.get<number>(
-            `${provider.toUpperCase()}_RATE_LIMIT_PER_DAY`,
-            0
-          ),
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        this.configCache.set(modelConfig.name, modelConfig);
-        this.cacheTimestamps.set(modelConfig.name, Date.now());
-      }
-    }
-
-    this.logger.log('Loaded configurations from environment variables');
-  }
-
-  /**
-   * Validate all model connections
-   */
-  private async validateConnections(): Promise<void> {
-    this.logger.log('Validating model connections...');
-
-    for (const [name, config] of this.configCache.entries()) {
-      try {
-        // Basic validation: check if API key is present
-        if (!config.apiKey) {
-          this.logger.warn(`Model ${name} has no API key`);
-          config.isActive = false;
-          continue;
-        }
-
-        this.logger.log(`Model ${name} (${config.provider}) is available`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to validate model ${name}: ${error instanceof Error ? error.message : String(error)}`
-        );
-        config.isActive = false;
-      }
     }
   }
 

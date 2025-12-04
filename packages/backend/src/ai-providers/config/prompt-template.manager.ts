@@ -3,7 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import {
   PromptTemplate,
   PromptTemplateVersion,
-  PromptScenario,
   TemplateRenderContext,
 } from '../interfaces/prompt-template.interface';
 import { PREDEFINED_TEMPLATES } from './predefined-templates';

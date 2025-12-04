@@ -6,11 +6,8 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import {
-  ProviderConfigService,
-  ModelConfigService,
-  YamlConfigLoader,
-} from './config';
+import { ModelConfigService, YamlConfigLoader } from './config';
+import { ConfigWatcherService } from './config/config-watcher.service';
 import { PromptTemplateManager } from './config/prompt-template.manager';
 import { PromptVersionManager } from './config/prompt-version.manager';
 import { AIProviderFactory } from './factory';
@@ -28,9 +25,9 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [ConfigModule, PrismaModule],
   controllers: [AIController, PromptAdminController, ModelAdminController],
   providers: [
-    ProviderConfigService,
     YamlConfigLoader,
     ModelConfigService,
+    ConfigWatcherService,
     AIProviderFactory,
     PromptTemplateManager,
     PromptVersionManager,
@@ -41,8 +38,8 @@ import { PrismaModule } from '../prisma/prisma.module';
     AIEngineService,
   ],
   exports: [
-    ProviderConfigService,
     ModelConfigService,
+    ConfigWatcherService,
     AIProviderFactory,
     PromptTemplateManager,
     PromptVersionManager,
