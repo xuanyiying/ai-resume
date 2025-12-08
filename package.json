@@ -24,7 +24,7 @@
     "deploy": "bash scripts/deploy.sh"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "concurrently": "^8.2.0",
     "eslint": "^8.45.0",
