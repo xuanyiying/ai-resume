@@ -46,16 +46,16 @@ importers:
         version: 3.940.0
       '@langchain/community':
         specifier: ^0.0.10
-        version: 0.0.10(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.940.0)(@smithy/eventstream-codec@4.2.5)(@smithy/protocol-http@5.3.5)(@smithy/signature-v4@5.3.5)(@smithy/util-utf8@4.2.0)(html-to-text@9.0.5)(ioredis@5.8.2)(jsdom@27.2.0)(lodash@4.17.21)(openai@4.104.0(ws@8.18.3)(zod@3.25.76))(redis@4.7.1)(ws@8.18.3)
+        version: 0.0.10(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.940.0)(@smithy/eventstream-codec@4.2.5)(@smithy/protocol-http@5.3.5)(@smithy/signature-v4@5.3.5)(@smithy/util-utf8@4.2.0)(html-to-text@9.0.5)(ioredis@5.8.2)(jsdom@27.2.0)(lodash@4.17.21)(openai@6.10.0(ws@8.18.3)(zod@3.25.76))(redis@4.7.1)(ws@8.18.3)
       '@langchain/core':
         specifier: ^0.1.63
-        version: 0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76))
+        version: 0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76))
       '@langchain/google-genai':
         specifier: ^2.0.4
-        version: 2.0.4(@langchain/core@0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76)))
+        version: 2.0.4(@langchain/core@0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76)))
       '@langchain/openai':
         specifier: ^1.1.3
-        version: 1.1.3(@langchain/core@0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
+        version: 1.1.3(@langchain/core@0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
       '@nestjs-modules/mailer':
         specifier: ^2.0.2
         version: 2.0.2(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/platform-express@10.4.20)(reflect-metadata@0.1.14)(rxjs@7.8.2))(nodemailer@6.10.1)
@@ -333,7 +333,7 @@ importers:
         version: 18.3.7(@types/react@18.3.27)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.1.1(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))
+        version: 5.1.1(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))
       '@vitest/coverage-v8':
         specifier: ^4.0.15
         version: 4.0.15(vitest@4.0.15(@opentelemetry/api@1.9.0)(@types/node@20.19.25)(@vitest/ui@4.0.15)(jsdom@27.2.0)(terser@5.44.1)(yaml@2.8.2))
@@ -350,11 +350,11 @@ importers:
         specifier: ^5.1.6
         version: 5.9.3
       vite:
-        specifier: ^7.2.6
-        version: 7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
+        specifier: ^7.2.7
+        version: 7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
       vite-plugin-pwa:
         specifier: ^1.2.0
-        version: 1.2.0(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
+        version: 1.2.0(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
       vitest:
         specifier: ^4.0.15
         version: 4.0.15(@opentelemetry/api@1.9.0)(@types/node@20.19.25)(@vitest/ui@4.0.15)(jsdom@27.2.0)(terser@5.44.1)(yaml@2.8.2)
@@ -2621,67 +2621,56 @@ packages:
     resolution: {integrity: sha512-k9oD15soC/Ln6d2Wv/JOFPzZXIAIFLp6B+i14KhxAfnq76ajt0EhYc5YPeX6W1xJkAdItcVT+JhKl1QZh44/qw==}
     cpu: [arm]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.53.3':
     resolution: {integrity: sha512-vTNlKq+N6CK/8UktsrFuc+/7NlEYVxgaEgRXVUVK258Z5ymho29skzW1sutgYjqNnquGwVUObAaxae8rZ6YMhg==}
     cpu: [arm]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.53.3':
     resolution: {integrity: sha512-RGrFLWgMhSxRs/EWJMIFM1O5Mzuz3Xy3/mnxJp/5cVhZ2XoCAxJnmNsEyeMJtpK+wu0FJFWz+QF4mjCA7AUQ3w==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.53.3':
     resolution: {integrity: sha512-kASyvfBEWYPEwe0Qv4nfu6pNkITLTb32p4yTgzFCocHnJLAHs+9LjUu9ONIhvfT/5lv4YS5muBHyuV84epBo/A==}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-loong64-gnu@4.53.3':
     resolution: {integrity: sha512-JiuKcp2teLJwQ7vkJ95EwESWkNRFJD7TQgYmCnrPtlu50b4XvT5MOmurWNrCj3IFdyjBQ5p9vnrX4JM6I8OE7g==}
     cpu: [loong64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-ppc64-gnu@4.53.3':
     resolution: {integrity: sha512-EoGSa8nd6d3T7zLuqdojxC20oBfNT8nexBbB/rkxgKj5T5vhpAQKKnD+h3UkoMuTyXkP5jTjK/ccNRmQrPNDuw==}
     cpu: [ppc64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.53.3':
     resolution: {integrity: sha512-4s+Wped2IHXHPnAEbIB0YWBv7SDohqxobiiPA1FIWZpX+w9o2i4LezzH/NkFUl8LRci/8udci6cLq+jJQlh+0g==}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.53.3':
     resolution: {integrity: sha512-68k2g7+0vs2u9CxDt5ktXTngsxOQkSEV/xBbwlqYcUrAVh6P9EgMZvFsnHy4SEiUl46Xf0IObWVbMvPrr2gw8A==}
     cpu: [riscv64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-s390x-gnu@4.53.3':
     resolution: {integrity: sha512-VYsFMpULAz87ZW6BVYw3I6sWesGpsP9OPcyKe8ofdg9LHxSbRMd7zrVrr5xi/3kMZtpWL/wC+UIJWJYVX5uTKg==}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.53.3':
     resolution: {integrity: sha512-3EhFi1FU6YL8HTUJZ51imGJWEX//ajQPfqWLI3BQq4TlvHy4X0MOr5q3D2Zof/ka0d5FNdPwZXm3Yyib/UEd+w==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.53.3':
     resolution: {integrity: sha512-eoROhjcc6HbZCJr+tvVT8X4fW3/5g/WkGvvmwz/88sDtSJzO7r/blvoBDgISDiCjDRZmHpwud7h+6Q9JxFwq1Q==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-openharmony-arm64@4.53.3':
     resolution: {integrity: sha512-OueLAWgrNSPGAdUdIjSWXw+u/02BRTcnfw9PN41D2vq/JSEPnJnVuBgw18VkN8wcd4fjUs+jFHVM4t9+kBSNLw==}
@@ -3723,6 +3712,10 @@ packages:
     resolution: {integrity: sha512-OPz5aBThlyLFgxyhdwf/s2+8ab3OvT7AdTNvKHBwpXomIYeXqpUUuT8LrdtxZSsWJ4R4CU1un4XGh5Ez3nlTpw==}
     hasBin: true
 
+  baseline-browser-mapping@2.9.6:
+    resolution: {integrity: sha512-v9BVVpOTLB59C9E7aSnmIF8h7qRsFpx+A2nugVMTszEOMcfjlZMsXRm4LF23I3Z9AJxc8ANpIvzbzONoX9VJlg==}
+    hasBin: true
+
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
@@ -3820,6 +3813,11 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
+  browserslist@4.28.1:
+    resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
+    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
+
   bs-logger@0.2.6:
     resolution: {integrity: sha512-pd8DCoxmbgc7hyPKOvxtqNcjYoOsABPQdcCUjGp3d42VR2CX1ORhk2A87oqqu5R1kk+76nsxZupkmyd+MVtCog==}
     engines: {node: '>= 6'}
@@ -3883,6 +3881,9 @@ packages:
 
   caniuse-lite@1.0.30001757:
     resolution: {integrity: sha512-r0nnL/I28Zi/yjk1el6ilj27tKcdjLsNqAOZr0yVjWPrSQyHgKI2INaEWw21bAQSv2LXRt1XuCS/GomNpWOxsQ==}
+
+  caniuse-lite@1.0.30001760:
+    resolution: {integrity: sha512-7AAMPcueWELt1p3mi13HR/LHH0TJLT11cnwDJEs3xA4+CK/PLKeO9Kl1oru24htkyUKtkGCvAx4ohB0Ttry8Dw==}
 
   caseless@0.12.0:
     resolution: {integrity: sha512-4tYFyifaFfGacoiObjJegolkwSU4xQNGbVgUiNYVUxbQ2x2lUsFvY4hVgVzGiIe6WLOPqycWXA40l+PWsxthUw==}
@@ -4479,6 +4480,9 @@ packages:
 
   electron-to-chromium@1.5.262:
     resolution: {integrity: sha512-NlAsMteRHek05jRUxUR0a5jpjYq9ykk6+kO0yRaMi5moe7u0fVIOeQ3Y30A8dIiWFBNUoQGi1ljb1i5VtS9WQQ==}
+
+  electron-to-chromium@1.5.267:
+    resolution: {integrity: sha512-0Drusm6MVRXSOJpGbaSVgcQsuB4hEkMpHXaVstcPmhu5LIedxs1xNK/nIxmQIU/RPC0+1/o0AVZfBTkTNJOdUw==}
 
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
@@ -8097,6 +8101,12 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  update-browserslist-db@1.2.2:
+    resolution: {integrity: sha512-E85pfNzMQ9jpKkA7+TJAi4TJN+tBCuWh5rUcS/sv6cFi+1q9LYDwDI5dpUL0u/73EElyQ8d3TEaeW4sPedBqYA==}
+    hasBin: true
+    peerDependencies:
+      browserslist: '>= 4.21.0'
+
   upper-case@1.1.3:
     resolution: {integrity: sha512-WRbjgmYzgXkCV7zNVpy5YgrHgbBv126rMALQQMrmzOVC4GM2waQ9x7xtm8VU+1yF2kWyPzI9zbZ48n4vSxwfSA==}
 
@@ -8191,8 +8201,8 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  vite@7.2.6:
-    resolution: {integrity: sha512-tI2l/nFHC5rLh7+5+o7QjKjSR04ivXDF4jcgV0f/bTQ+OJiITy5S6gaynVsEM+7RqzufMnVbIon6Sr5x1SDYaQ==}
+  vite@7.2.7:
+    resolution: {integrity: sha512-ITcnkFeR3+fI8P1wMgItjGrR10170d8auB4EpMLPqmx6uxElH3a/hHGQabSHKdqd4FXWO1nFIp9rRn7JQ34ACQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -10477,9 +10487,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@langchain/community@0.0.10(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.940.0)(@smithy/eventstream-codec@4.2.5)(@smithy/protocol-http@5.3.5)(@smithy/signature-v4@5.3.5)(@smithy/util-utf8@4.2.0)(html-to-text@9.0.5)(ioredis@5.8.2)(jsdom@27.2.0)(lodash@4.17.21)(openai@4.104.0(ws@8.18.3)(zod@3.25.76))(redis@4.7.1)(ws@8.18.3)':
+  '@langchain/community@0.0.10(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-provider-node@3.940.0)(@smithy/eventstream-codec@4.2.5)(@smithy/protocol-http@5.3.5)(@smithy/signature-v4@5.3.5)(@smithy/util-utf8@4.2.0)(html-to-text@9.0.5)(ioredis@5.8.2)(jsdom@27.2.0)(lodash@4.17.21)(openai@6.10.0(ws@8.18.3)(zod@3.25.76))(redis@4.7.1)(ws@8.18.3)':
     dependencies:
-      '@langchain/core': 0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76))
+      '@langchain/core': 0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76))
       '@langchain/openai': 0.0.34(ws@8.18.3)
       flat: 5.0.2
       langsmith: 0.0.70
@@ -10519,10 +10529,27 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/google-genai@2.0.4(@langchain/core@0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76)))':
+  '@langchain/core@0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76))':
+    dependencies:
+      ansi-styles: 5.2.0
+      camelcase: 6.3.0
+      decamelize: 1.2.0
+      js-tiktoken: 1.0.21
+      langsmith: 0.1.68(openai@6.10.0(ws@8.18.3)(zod@3.25.76))
+      ml-distance: 4.0.1
+      mustache: 4.2.0
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      uuid: 9.0.1
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
+    transitivePeerDependencies:
+      - openai
+
+  '@langchain/google-genai@2.0.4(@langchain/core@0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76)))':
     dependencies:
       '@google/generative-ai': 0.24.1
-      '@langchain/core': 0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76))
+      '@langchain/core': 0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76))
       uuid: 11.1.0
 
   '@langchain/openai@0.0.34(ws@8.18.3)':
@@ -10536,9 +10563,9 @@ snapshots:
       - encoding
       - ws
 
-  '@langchain/openai@1.1.3(@langchain/core@0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)':
+  '@langchain/openai@1.1.3(@langchain/core@0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)':
     dependencies:
-      '@langchain/core': 0.1.63(openai@4.104.0(ws@8.18.3)(zod@3.25.76))
+      '@langchain/core': 0.1.63(openai@6.10.0(ws@8.18.3)(zod@3.25.76))
       js-tiktoken: 1.0.21
       openai: 6.10.0(ws@8.18.3)(zod@4.1.13)
       zod: 4.1.13
@@ -12136,7 +12163,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-react@5.1.1(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))':
+  '@vitejs/plugin-react@5.1.1(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))':
     dependencies:
       '@babel/core': 7.28.5
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.5)
@@ -12144,7 +12171,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.47
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
+      vite: 7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -12174,13 +12201,13 @@ snapshots:
       chai: 6.2.1
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.15(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))':
+  '@vitest/mocker@4.0.15(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 4.0.15
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
+      vite: 7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
 
   '@vitest/pretty-format@4.0.15':
     dependencies:
@@ -12698,6 +12725,8 @@ snapshots:
 
   baseline-browser-mapping@2.8.32: {}
 
+  baseline-browser-mapping@2.9.6: {}
+
   basic-ftp@5.0.5: {}
 
   bcrypt-pbkdf@1.0.2:
@@ -12796,6 +12825,14 @@ snapshots:
       node-releases: 2.0.27
       update-browserslist-db: 1.1.4(browserslist@4.28.0)
 
+  browserslist@4.28.1:
+    dependencies:
+      baseline-browser-mapping: 2.9.6
+      caniuse-lite: 1.0.30001760
+      electron-to-chromium: 1.5.267
+      node-releases: 2.0.27
+      update-browserslist-db: 1.2.2(browserslist@4.28.1)
+
   bs-logger@0.2.6:
     dependencies:
       fast-json-stable-stringify: 2.1.0
@@ -12865,6 +12902,8 @@ snapshots:
   camelcase@6.3.0: {}
 
   caniuse-lite@1.0.30001757: {}
+
+  caniuse-lite@1.0.30001760: {}
 
   caseless@0.12.0: {}
 
@@ -13139,7 +13178,7 @@ snapshots:
 
   core-js-compat@3.47.0:
     dependencies:
-      browserslist: 4.28.0
+      browserslist: 4.28.1
 
   core-util-is@1.0.2: {}
 
@@ -13495,6 +13534,8 @@ snapshots:
       jake: 10.9.4
 
   electron-to-chromium@1.5.262: {}
+
+  electron-to-chromium@1.5.267: {}
 
   emittery@0.13.1: {}
 
@@ -15359,6 +15400,17 @@ snapshots:
     optionalDependencies:
       openai: 4.104.0(ws@8.18.3)(zod@3.25.76)
 
+  langsmith@0.1.68(openai@6.10.0(ws@8.18.3)(zod@3.25.76)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      commander: 10.0.1
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      semver: 7.7.3
+      uuid: 10.0.0
+    optionalDependencies:
+      openai: 6.10.0(ws@8.18.3)(zod@3.25.76)
+
   leac@0.6.0:
     optional: true
 
@@ -16197,6 +16249,12 @@ snapshots:
       zod: 3.25.76
     transitivePeerDependencies:
       - encoding
+
+  openai@6.10.0(ws@8.18.3)(zod@3.25.76):
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 3.25.76
+    optional: true
 
   openai@6.10.0(ws@8.18.3)(zod@4.1.13):
     optionalDependencies:
@@ -17799,6 +17857,12 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
+  update-browserslist-db@1.2.2(browserslist@4.28.1):
+    dependencies:
+      browserslist: 4.28.1
+      escalade: 3.2.0
+      picocolors: 1.1.1
+
   upper-case@1.1.3:
     optional: true
 
@@ -17874,18 +17938,18 @@ snapshots:
       core-util-is: 1.0.2
       extsprintf: 1.3.0
 
-  vite-plugin-pwa@1.2.0(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0):
+  vite-plugin-pwa@1.2.0(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0):
     dependencies:
       debug: 4.4.3
       pretty-bytes: 6.1.1
       tinyglobby: 0.2.15
-      vite: 7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
+      vite: 7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
       workbox-build: 7.4.0(@types/babel__core@7.20.5)
       workbox-window: 7.4.0
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2):
+  vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -17902,7 +17966,7 @@ snapshots:
   vitest@4.0.15(@opentelemetry/api@1.9.0)(@types/node@20.19.25)(@vitest/ui@4.0.15)(jsdom@27.2.0)(terser@5.44.1)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.15
-      '@vitest/mocker': 4.0.15(vite@7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.15(vite@7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2))
       '@vitest/pretty-format': 4.0.15
       '@vitest/runner': 4.0.15
       '@vitest/snapshot': 4.0.15
@@ -17919,7 +17983,7 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.2.6(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
+      vite: 7.2.7(@types/node@20.19.25)(terser@5.44.1)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
