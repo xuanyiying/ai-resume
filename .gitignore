@@ -74,3 +74,4 @@ postgres_data/
 redis_data/
 # Turborepo
 .turbo/
+/packages/backend/prisma/migrations

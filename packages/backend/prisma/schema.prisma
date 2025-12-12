@@ -24,8 +24,10 @@ enum Role {
 model User {
     id                    String           @id @default(uuid())
     email                 String           @unique
-    passwordHash          String
+    passwordHash          String? // Made optional for OAuth users
     username              String?
+    name                  String? // Added for BetterAuth
+    image                 String? // Added for BetterAuth
     role                  Role             @default(USER)
     phone                 String?
     avatarUrl             String?
@@ -46,18 +48,69 @@ model User {
     subscriptionProvider  String? // 'stripe' | 'paddle'
 
     // Relations
-    resumes        Resume[]
-    jobs           Job[]
-    optimizations  Optimization[]
-    generatedPdfs  GeneratedPDF[]
-    conversations  Conversation[]
-    messages       Message[]
-    invitationCode InvitationCode?
-    storages       Storage[]
+    resumes           Resume[]
+    jobs              Job[]
+    optimizations     Optimization[]
+    generatedPdfs     GeneratedPDF[]
+    conversations     Conversation[]
+    messages          Message[]
+    invitationCode    InvitationCode?
+    storages          Storage[]
     interviewSessions InterviewSession[]
+
+    // BetterAuth Relations
+    sessions      Session[]
+    accounts      Account[]
+    agentSessions AgentSession[]
 
     @@index([email])
     @@map("users")
+}
+
+model Session {
+    id        String   @id
+    userId    String
+    expiresAt DateTime
+    token     String
+    ipAddress String?
+    userAgent String?
+    createdAt DateTime
+    updatedAt DateTime
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([token])
+    @@map("sessions")
+}
+
+model Account {
+    id                    String    @id
+    accountId             String
+    providerId            String
+    userId                String
+    user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accessToken           String?
+    refreshToken          String?
+    idToken               String?
+    accessTokenExpiresAt  DateTime?
+    refreshTokenExpiresAt DateTime?
+    scope                 String?
+    password              String?
+    createdAt             DateTime
+    updatedAt             DateTime
+
+    @@map("accounts")
+}
+
+model Verification {
+    id         String    @id
+    identifier String
+    value      String
+    expiresAt  DateTime
+    createdAt  DateTime?
+    updatedAt  DateTime?
+
+    @@map("verification")
 }
 
 // Resume model
@@ -292,12 +345,16 @@ model UsageRecord {
     latency      Int
     success      Boolean
     errorCode    String?
+    agentType    String? // 'pitch-perfect' | 'strategist' | 'role-play'
+    workflowStep String? // Step name in Agent workflow
     timestamp    DateTime @default(now())
 
     @@index([userId])
     @@index([model])
     @@index([provider])
     @@index([timestamp])
+    @@index([agentType])
+    @@index([workflowStep])
     @@map("usage_records")
 }
 
@@ -493,22 +550,22 @@ enum OssType {
 
 // Storage model
 model Storage {
-    id            String   @id @default(uuid())
-    userId        String
-    filename      String
-    originalName  String
-    fileSize      Int
-    mimeType      String
-    fileUrl       String
-    filePath      String // OSS Key
-    hashMd5       String
-    fileType      FileType
-    category      String?
-    thumbnailUrl  String?
-    ossType       OssType
-    isPublic      Boolean  @default(false)
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+    id           String   @id @default(uuid())
+    userId       String
+    filename     String
+    originalName String
+    fileSize     Int
+    mimeType     String
+    fileUrl      String
+    filePath     String // OSS Key
+    hashMd5      String
+    fileType     FileType
+    category     String?
+    thumbnailUrl String?
+    ossType      OssType
+    isPublic     Boolean  @default(false)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
     // Relations
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -533,8 +590,8 @@ model InterviewSession {
     updatedAt      DateTime        @updatedAt
 
     // Relations
-    user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-    optimization Optimization      @relation(fields: [optimizationId], references: [id], onDelete: Cascade)
+    user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+    optimization Optimization       @relation(fields: [optimizationId], references: [id], onDelete: Cascade)
     messages     InterviewMessage[]
 
     @@index([userId])
@@ -562,4 +619,43 @@ enum InterviewStatus {
     IN_PROGRESS
     COMPLETED
     CANCELLED
+}
+
+// Vector Document model for RAG
+model VectorDocument {
+    id        String                       @id @default(cuid())
+    content   String                       @db.Text
+    embedding Unsupported("vector(1536)")?
+    metadata  Json?
+    createdAt DateTime                     @default(now())
+    updatedAt DateTime                     @updatedAt
+
+    @@index([createdAt])
+    @@map("vector_documents")
+}
+
+// Agent Session model for tracking Agent executions
+model AgentSession {
+    id          String    @id @default(cuid())
+    userId      String
+    agentType   String // 'pitch-perfect' | 'strategist' | 'role-play'
+    status      String // 'active' | 'completed' | 'failed'
+    input       Json?
+    output      Json?
+    tokenUsage  Json? // { total: number, byStep: Record<string, number> }
+    cost        Float     @default(0)
+    startedAt   DateTime  @default(now())
+    completedAt DateTime?
+    metadata    Json?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([agentType])
+    @@index([status])
+    @@index([startedAt])
+    @@map("agent_sessions")
 }

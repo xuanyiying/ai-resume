@@ -21,6 +21,8 @@ export interface UsageRecord {
   success: boolean;
   errorCode?: string;
   timestamp: Date;
+  agentType?: string; // 'pitch-perfect' | 'strategist' | 'role-play'
+  workflowStep?: string; // Step name in Agent workflow
 }
 
 export interface CostReport {
@@ -28,7 +30,7 @@ export interface CostReport {
     startDate: Date;
     endDate: Date;
   };
-  groupBy: 'model' | 'scenario' | 'user';
+  groupBy: 'model' | 'scenario' | 'user' | 'agent-type' | 'workflow-step';
   totalCost: number;
   items: Array<{
     key: string;
@@ -56,6 +58,7 @@ export class UsageTrackerService {
   /**
    * Record AI usage
    * Property 35: 使用量记录完整性
+   * Property 36: Token Usage Tracking Completeness
    */
   async recordUsage(
     record: Omit<UsageRecord, 'id' | 'timestamp'>
@@ -69,20 +72,24 @@ export class UsageTrackerService {
           userId: record.userId,
           model: record.model,
           provider: record.provider,
-          scenario: record.scenario,
+          scenario: record.scenario || null,
           inputTokens: record.inputTokens,
           outputTokens: record.outputTokens,
           cost: record.cost,
           latency: record.latency,
           success: record.success,
-          errorCode: record.errorCode,
+          errorCode: record.errorCode || null,
+          agentType: record.agentType || null,
+          workflowStep: record.workflowStep || null,
           timestamp: new Date(),
         },
       });
 
-      this.logger.debug(
-        `Recorded usage for model ${record.model}: ${record.inputTokens} input tokens, ${record.outputTokens} output tokens, cost: ${record.cost}`
-      );
+      const logMessage = record.agentType
+        ? `Recorded Agent usage (${record.agentType}/${record.workflowStep}): ${record.inputTokens} input tokens, ${record.outputTokens} output tokens, cost: ${record.cost}`
+        : `Recorded usage for model ${record.model}: ${record.inputTokens} input tokens, ${record.outputTokens} output tokens, cost: ${record.cost}`;
+
+      this.logger.debug(logMessage);
 
       return this.mapPrismaToUsageRecord(created);
     } catch (error) {
@@ -206,13 +213,189 @@ export class UsageTrackerService {
   }
 
   /**
+   * Get cost by Agent type
+   * Property 37: Multi-Dimensional Usage Aggregation
+   */
+  async getCostByAgentType(
+    startDate: Date,
+    endDate: Date,
+    agentType?: string
+  ): Promise<Map<string, number>> {
+    try {
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+          ...(agentType && { agentType }),
+          success: true,
+          ...(agentType === undefined && { agentType: { not: null } }),
+        },
+      });
+
+      const costMap = new Map<string, number>();
+
+      for (const record of records as any[]) {
+        const key = record.agentType || 'unknown';
+        const current = costMap.get(key) || 0;
+        costMap.set(key, current + record.cost);
+      }
+
+      return costMap;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get cost by Agent type: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get cost by workflow step
+   * Property 37: Multi-Dimensional Usage Aggregation
+   */
+  async getCostByWorkflowStep(
+    startDate: Date,
+    endDate: Date,
+    agentType?: string
+  ): Promise<Map<string, number>> {
+    try {
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+          ...(agentType && { agentType }),
+          success: true,
+          ...(agentType === undefined && { workflowStep: { not: null } }),
+        },
+      });
+
+      const costMap = new Map<string, number>();
+
+      for (const record of records as any[]) {
+        const key = record.workflowStep || 'unknown';
+        const current = costMap.get(key) || 0;
+        costMap.set(key, current + record.cost);
+      }
+
+      return costMap;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get cost by workflow step: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Generate step-level token breakdown for Agent workflow
+   * Property 40: Step-Level Token Breakdown
+   */
+  async generateStepBreakdown(
+    agentSessionId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    totalTokens: number;
+    totalCost: number;
+    steps: Array<{
+      stepName: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      cost: number;
+      callCount: number;
+      averageLatency: number;
+      optimizationSavings?: number;
+    }>;
+  }> {
+    try {
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          timestamp: {
+            gte: startDate,
+            lte: endDate,
+          },
+          success: true,
+        },
+      });
+
+      const stepMap = new Map<
+        string,
+        {
+          inputTokens: number;
+          outputTokens: number;
+          cost: number;
+          callCount: number;
+          latencies: number[];
+        }
+      >();
+
+      for (const record of records as any[]) {
+        const stepName = record.workflowStep || 'unknown';
+        if (stepName === 'unknown') continue; // Skip records without workflow step
+
+        const current = stepMap.get(stepName) || {
+          inputTokens: 0,
+          outputTokens: 0,
+          cost: 0,
+          callCount: 0,
+          latencies: [],
+        };
+
+        current.inputTokens += record.inputTokens;
+        current.outputTokens += record.outputTokens;
+        current.cost += record.cost;
+        current.callCount += 1;
+        current.latencies.push(record.latency);
+
+        stepMap.set(stepName, current);
+      }
+
+      const steps = Array.from(stepMap.entries()).map(([stepName, data]) => ({
+        stepName,
+        inputTokens: data.inputTokens,
+        outputTokens: data.outputTokens,
+        totalTokens: data.inputTokens + data.outputTokens,
+        cost: Math.round(data.cost * 10000) / 10000,
+        callCount: data.callCount,
+        averageLatency:
+          data.latencies.length > 0
+            ? Math.round(
+                (data.latencies.reduce((a, b) => a + b, 0) /
+                  data.latencies.length) *
+                  100
+              ) / 100
+            : 0,
+      }));
+
+      const totalTokens = steps.reduce((sum, s) => sum + s.totalTokens, 0);
+      const totalCost = steps.reduce((sum, s) => sum + s.cost, 0);
+
+      return {
+        totalTokens,
+        totalCost: Math.round(totalCost * 10000) / 10000,
+        steps: steps.sort((a, b) => b.cost - a.cost),
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate step breakdown: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Generate cost report
    * Property 37: 成本报告生成
    */
   async generateCostReport(
     startDate: Date,
     endDate: Date,
-    groupBy: 'model' | 'scenario' | 'user'
+    groupBy: 'model' | 'scenario' | 'user' | 'agent-type' | 'workflow-step'
   ): Promise<CostReport> {
     try {
       const records = await this.prisma.usageRecord.findMany({
@@ -243,6 +426,10 @@ export class UsageTrackerService {
           key = record.model;
         } else if (groupBy === 'scenario') {
           key = record.scenario || 'unknown';
+        } else if (groupBy === 'agent-type') {
+          key = record.agentType || 'unknown';
+        } else if (groupBy === 'workflow-step') {
+          key = record.workflowStep || 'unknown';
         } else {
           key = record.userId;
         }
@@ -613,7 +800,9 @@ export class UsageTrackerService {
   /**
    * Map Prisma UsageRecord to UsageRecord interface
    */
-  private mapPrismaToUsageRecord(record: PrismaUsageRecord): UsageRecord {
+  private mapPrismaToUsageRecord(
+    record: PrismaUsageRecord & { agentType?: string; workflowStep?: string }
+  ): UsageRecord {
     return {
       id: record.id,
       userId: record.userId,
@@ -627,6 +816,8 @@ export class UsageTrackerService {
       success: record.success,
       errorCode: record.errorCode || undefined,
       timestamp: record.timestamp,
+      agentType: record.agentType || undefined,
+      workflowStep: record.workflowStep || undefined,
     };
   }
 }

@@ -13,7 +13,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 describe('UsageTrackerService', () => {
   let service: UsageTrackerService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     usageRecord: {
@@ -35,7 +34,6 @@ describe('UsageTrackerService', () => {
     }).compile();
 
     service = module.get<UsageTrackerService>(UsageTrackerService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OssService } from './oss.interface';
 import { MinIOService } from './minio.provider';
 import { AwsS3Service } from './aws-s3.provider';
@@ -7,7 +7,6 @@ import { AliyunOssService } from '@/storage/providers/aliyun-oss.provider';
 
 @Injectable()
 export class OssFactory {
-  private readonly logger = new Logger(OssFactory.name);
   private static instance: OssService | null = null;
   private static currentConfig: OssConfigOptions | null = null;
 

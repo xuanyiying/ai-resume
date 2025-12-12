@@ -87,7 +87,7 @@ export class QualityOptimizedStrategy implements ModelSelectionStrategy {
 
   selectModel(
     availableModels: ModelInfo[],
-    context: SelectionContext
+    _context: SelectionContext
   ): ModelInfo {
     if (availableModels.length === 0) {
       throw new Error('No available models for selection');
@@ -156,7 +156,7 @@ export class LatencyOptimizedStrategy implements ModelSelectionStrategy {
 export class BalancedStrategy implements ModelSelectionStrategy {
   selectModel(
     availableModels: ModelInfo[],
-    context: SelectionContext
+    _context: SelectionContext
   ): ModelInfo {
     if (availableModels.length === 0) {
       throw new Error('No available models for selection');

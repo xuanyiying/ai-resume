@@ -31,6 +31,8 @@ import {
 } from './common/middleware/performance.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +43,7 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
     LoggerModule,
     CommonModule,
     PrismaModule,
+    AuthModule,
     RedisModule,
     HealthModule,
     UserModule,

@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Production Docker Compose Configuration
 # This configuration is optimized for production deployment with:
 # - PostgreSQL with persistent storage and backups
@@ -32,21 +30,16 @@ services:
       POSTGRES_MIN_WAL_SIZE: 1GB
       POSTGRES_MAX_WAL_SIZE: 4GB
     ports:
-      - '127.0.0.1:5432:5432'  # Only expose to localhost
+      - '127.0.0.1:5432:5432' # Only expose to localhost
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups/postgres:/backups
       - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     command: >
-      postgres
-      -c config_file=/etc/postgresql/postgresql.conf
-      -c hba_file=/etc/postgresql/pg_hba.conf
-      -c ssl=on
-      -c ssl_cert_file=/var/lib/postgresql/server.crt
-      -c ssl_key_file=/var/lib/postgresql/server.key
+      postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -73,26 +66,14 @@ services:
     image: redis:7-alpine
     container_name: resume-optimizer-redis-prod
     command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD}
-      --appendonly yes
-      --appendfsync everysec
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
-      --save 900 1
-      --save 300 10
-      --save 60 10000
-      --tcp-backlog 511
-      --timeout 300
-      --tcp-keepalive 300
-      --loglevel notice
+      redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes --appendfsync everysec --maxmemory 512mb --maxmemory-policy allkeys-lru --save 900 1 --save 300 10 --save 60 10000 --tcp-backlog 511 --timeout 300 --tcp-keepalive 300 --loglevel notice
     ports:
-      - '127.0.0.1:6379:6379'  # Only expose to localhost
+      - '127.0.0.1:6379:6379' # Only expose to localhost
     volumes:
       - redis_data:/data
       - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     healthcheck:
-      test: ['CMD', 'redis-cli', '--pass', '${REDIS_PASSWORD}', 'ping']
+      test: [ 'CMD', 'redis-cli', '--pass', '${REDIS_PASSWORD}', 'ping' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,7 +102,7 @@ services:
       dockerfile: packages/backend/Dockerfile
       args:
         NODE_ENV: production
-    container_name: resume-optimizer-backend-prod
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,7 +112,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       API_PREFIX: /api/v1
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&sslmode=require&connect_timeout=10&pool_timeout=10
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public&sslmode=disable&connect_timeout=10&pool_timeout=10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -139,15 +120,6 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
-      STORAGE_PROVIDER: ${STORAGE_PROVIDER}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_REGION: ${AWS_REGION}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      ALIYUN_ACCESS_KEY_ID: ${ALIYUN_ACCESS_KEY_ID}
-      ALIYUN_ACCESS_KEY_SECRET: ${ALIYUN_ACCESS_KEY_SECRET}
-      ALIYUN_OSS_REGION: ${ALIYUN_OSS_REGION}
-      ALIYUN_OSS_BUCKET: ${ALIYUN_OSS_BUCKET}
       RATE_LIMIT_FREE_TIER: ${RATE_LIMIT_FREE_TIER:-10}
       RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-3600}
       MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
@@ -178,7 +150,7 @@ services:
           cpus: '1'
           memory: 1G
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/health']
+      test: [ 'CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/health' ]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -197,7 +169,7 @@ services:
       args:
         NODE_ENV: production
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    container_name: resume-optimizer-frontend-prod
+
     depends_on:
       - backend
     environment:
@@ -220,7 +192,7 @@ services:
           cpus: '0.5'
           memory: 256M
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/']
+      test: [ 'CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/' ]
       interval: 30s
       timeout: 10s
       start_period: 20s
@@ -260,7 +232,7 @@ services:
           cpus: '0.25'
           memory: 128M
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/health']
+      test: [ 'CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/health' ]
       interval: 30s
       timeout: 10s
       retries: 3

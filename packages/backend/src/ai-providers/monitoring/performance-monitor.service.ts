@@ -43,6 +43,23 @@ export interface PerformanceAlert {
   severity: 'WARNING' | 'CRITICAL';
 }
 
+export interface AgentThreshold {
+  agentType: string;
+  dailyTokenLimit?: number;
+  monthlyTokenLimit?: number;
+  dailyCostLimit?: number;
+  monthlyCostLimit?: number;
+}
+
+export interface AgentAlert {
+  agentType: string;
+  alertType: 'EXCESSIVE_TOKEN_USAGE' | 'EXCESSIVE_COST';
+  threshold: number;
+  currentValue: number;
+  severity: 'WARNING' | 'CRITICAL';
+  period: 'daily' | 'monthly';
+}
+
 @Injectable()
 export class PerformanceMonitorService {
   private readonly logger = new Logger(PerformanceMonitorService.name);
@@ -50,6 +67,9 @@ export class PerformanceMonitorService {
   // Alert thresholds
   private readonly FAILURE_RATE_THRESHOLD = 0.1; // 10%
   private readonly LATENCY_THRESHOLD_MS = 30000; // 30 seconds
+
+  // Agent-specific thresholds
+  private agentThresholds: Map<string, AgentThreshold> = new Map();
 
   constructor(private prisma: PrismaService) {}
 
@@ -440,6 +460,271 @@ export class PerformanceMonitorService {
         `Failed to calculate metrics for date range: ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
+    }
+  }
+
+  /**
+   * Set Agent threshold
+   * Property 39: Threshold Alert Triggering
+   */
+  setAgentThreshold(agentType: string, threshold: AgentThreshold): void {
+    this.agentThresholds.set(agentType, threshold);
+    this.logger.log(`Set Agent threshold for ${agentType}`);
+  }
+
+  /**
+   * Get Agent threshold
+   */
+  getAgentThreshold(agentType: string): AgentThreshold | undefined {
+    return this.agentThresholds.get(agentType);
+  }
+
+  /**
+   * Check Agent thresholds and generate alerts
+   * Property 39: Threshold Alert Triggering
+   */
+  async checkAgentThresholds(
+    agentType: string,
+    userId: string
+  ): Promise<AgentAlert[]> {
+    try {
+      const threshold = this.agentThresholds.get(agentType);
+      if (!threshold) {
+        return [];
+      }
+
+      const alerts: AgentAlert[] = [];
+
+      // Check daily token limit
+      if (threshold.dailyTokenLimit) {
+        const dailyTokens = await this.getAgentDailyTokenUsage(
+          agentType,
+          userId
+        );
+        if (dailyTokens > threshold.dailyTokenLimit) {
+          alerts.push({
+            agentType,
+            alertType: 'EXCESSIVE_TOKEN_USAGE',
+            threshold: threshold.dailyTokenLimit,
+            currentValue: dailyTokens,
+            severity: dailyTokens > threshold.dailyTokenLimit * 1.5 ? 'CRITICAL' : 'WARNING',
+            period: 'daily',
+          });
+
+          this.logger.warn(
+            `Daily token limit exceeded for Agent ${agentType}: ${dailyTokens} > ${threshold.dailyTokenLimit}`
+          );
+        }
+      }
+
+      // Check monthly token limit
+      if (threshold.monthlyTokenLimit) {
+        const monthlyTokens = await this.getAgentMonthlyTokenUsage(
+          agentType,
+          userId
+        );
+        if (monthlyTokens > threshold.monthlyTokenLimit) {
+          alerts.push({
+            agentType,
+            alertType: 'EXCESSIVE_TOKEN_USAGE',
+            threshold: threshold.monthlyTokenLimit,
+            currentValue: monthlyTokens,
+            severity: monthlyTokens > threshold.monthlyTokenLimit * 1.5 ? 'CRITICAL' : 'WARNING',
+            period: 'monthly',
+          });
+
+          this.logger.warn(
+            `Monthly token limit exceeded for Agent ${agentType}: ${monthlyTokens} > ${threshold.monthlyTokenLimit}`
+          );
+        }
+      }
+
+      // Check daily cost limit
+      if (threshold.dailyCostLimit) {
+        const dailyCost = await this.getAgentDailyCost(agentType, userId);
+        if (dailyCost > threshold.dailyCostLimit) {
+          alerts.push({
+            agentType,
+            alertType: 'EXCESSIVE_COST',
+            threshold: threshold.dailyCostLimit,
+            currentValue: dailyCost,
+            severity: dailyCost > threshold.dailyCostLimit * 1.5 ? 'CRITICAL' : 'WARNING',
+            period: 'daily',
+          });
+
+          this.logger.warn(
+            `Daily cost limit exceeded for Agent ${agentType}: ${dailyCost} > ${threshold.dailyCostLimit}`
+          );
+        }
+      }
+
+      // Check monthly cost limit
+      if (threshold.monthlyCostLimit) {
+        const monthlyCost = await this.getAgentMonthlyCost(agentType, userId);
+        if (monthlyCost > threshold.monthlyCostLimit) {
+          alerts.push({
+            agentType,
+            alertType: 'EXCESSIVE_COST',
+            threshold: threshold.monthlyCostLimit,
+            currentValue: monthlyCost,
+            severity: monthlyCost > threshold.monthlyCostLimit * 1.5 ? 'CRITICAL' : 'WARNING',
+            period: 'monthly',
+          });
+
+          this.logger.warn(
+            `Monthly cost limit exceeded for Agent ${agentType}: ${monthlyCost} > ${threshold.monthlyCostLimit}`
+          );
+        }
+      }
+
+      return alerts;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check Agent thresholds: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get daily token usage for Agent
+   */
+  private async getAgentDailyTokenUsage(
+    agentType: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          userId,
+          agentType,
+          timestamp: {
+            gte: today,
+            lt: tomorrow,
+          },
+          success: true,
+        },
+      });
+
+      return records.reduce(
+        (sum, r) => sum + r.inputTokens + r.outputTokens,
+        0
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to get daily token usage: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Get monthly token usage for Agent
+   */
+  private async getAgentMonthlyTokenUsage(
+    agentType: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          userId,
+          agentType,
+          timestamp: {
+            gte: firstDay,
+            lte: lastDay,
+          },
+          success: true,
+        },
+      });
+
+      return records.reduce(
+        (sum, r) => sum + r.inputTokens + r.outputTokens,
+        0
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to get monthly token usage: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Get daily cost for Agent
+   */
+  private async getAgentDailyCost(
+    agentType: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          userId,
+          agentType,
+          timestamp: {
+            gte: today,
+            lt: tomorrow,
+          },
+          success: true,
+        },
+      });
+
+      return records.reduce((sum, r) => sum + r.cost, 0);
+    } catch (error) {
+      this.logger.error(
+        `Failed to get daily cost: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Get monthly cost for Agent
+   */
+  private async getAgentMonthlyCost(
+    agentType: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      const records = await this.prisma.usageRecord.findMany({
+        where: {
+          userId,
+          agentType,
+          timestamp: {
+            gte: firstDay,
+            lte: lastDay,
+          },
+          success: true,
+        },
+      });
+
+      return records.reduce((sum, r) => sum + r.cost, 0);
+    } catch (error) {
+      this.logger.error(
+        `Failed to get monthly cost: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return 0;
     }
   }
 

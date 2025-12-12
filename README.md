@@ -24,60 +24,70 @@ Resume Optimizer is a comprehensive SaaS platform designed to help job seekers e
 ## Key Features
 
 ### Full Interview Process Guidance
+
 - Personalized interview preparation plan
 - Interview skills training and advice
 - Interview progress tracking and feedback
 - Interview performance analysis and improvement suggestions
 
 ### Self-Introduction Optimization
+
 - Customized self-introduction based on target position
 - Personalized opening statement generation
 - Language expression optimization and polishing
 - Self-introduction templates for different scenarios
 
 ### AI-Powered Resume Analysis
+
 - Intelligent parsing of resumes in various formats (PDF, DOCX, TXT)
 - Detailed analysis of resume content against job descriptions
 - Match scoring with breakdown by skills, experience, education, and keywords
 - Actionable suggestions for improvement
 
 ### Multi-Provider AI Support
+
 - Support for major AI providers: OpenAI, Qwen, DeepSeek, Gemini, and Ollama
 - Automatic model selection based on performance and availability
 - Built-in fallback mechanisms for high availability
 - Usage tracking and cost monitoring
 
 ### Resume Optimization
+
 - Content enhancement suggestions
 - Keyword optimization for applicant tracking systems (ATS)
 - Structure improvements for better readability
 - Quantification of achievements
 
 ### Professional Document Generation
+
 - Multiple premium templates for resume presentation
 - Customizable PDF generation options
 - Cover letter generation capabilities
 - Professional formatting and design
 
 ### Interview Question Prediction and Answers
+
 - AI-generated interview questions based on resume and job
 - Behavioral, technical, and situational questions
 - Suggested answers and tips for common questions
 - Practice interview sessions
 
 ### One-on-One Mock Interviews
+
 - Real-time video mock interviews
 - AI interviewer functionality
 - Interview session recording and playback
 - Personalized feedback and scoring
 
 ### Subscription & Payment System
+
 - Tiered subscription plans (Free, Pro, Enterprise)
 - Integration with Stripe and Paddle payment processors
 - Usage quotas based on subscription tier
 - Flexible billing periods (monthly/yearly)
 
 ### Advanced Features
+
 - Real-time chat interface for interactive assistance
 - Resume versioning and history tracking
 - Job tracking and application management
@@ -86,6 +96,7 @@ Resume Optimizer is a comprehensive SaaS platform designed to help job seekers e
 ## Technology Stack
 
 ### Backend
+
 - **Framework**: [NestJS](https://nestjs.com/) - Progressive Node.js framework
 - **Language**: [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
 - **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
@@ -101,6 +112,7 @@ Resume Optimizer is a comprehensive SaaS platform designed to help job seekers e
 - **Monitoring**: Prometheus, Grafana, Loki for metrics and logs
 
 ### Frontend
+
 - **Framework**: [React 18](https://reactjs.org/) with [Vite](https://vitejs.dev/)
 - **Language**: TypeScript
 - **UI Library**: [Ant Design 5](https://ant.design/)
@@ -134,6 +146,7 @@ The platform follows a modern microservices-inspired architecture within a monor
 ```
 
 ### Backend Architecture
+
 - Modular design with feature-based modules
 - Clean separation of concerns with services, controllers, and DTOs
 - Event-driven processing with Bull queues
@@ -141,6 +154,7 @@ The platform follows a modern microservices-inspired architecture within a monor
 - Security best practices (helmet, CORS, rate limiting)
 
 ### Data Flow
+
 1. User uploads resume and enters job description
 2. System parses documents using AI
 3. AI engine compares resume with job requirements
@@ -266,17 +280,20 @@ This is a monorepo containing:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd resume-optimizer
 ```
 
 2. Install dependencies using pnpm (recommended):
+
 ```bash
 pnpm install
 ```
 
 Or using npm:
+
 ```bash
 npm install
 ```
@@ -323,9 +340,10 @@ pnpm dev:frontend
 ```
 
 The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-- Swagger Docs: http://localhost:3000/api/docs
+
+- Frontend: <http://localhost:5173>
+- Backend API: <http://localhost:3000>
+- Swagger Docs: <http://localhost:3000/api/docs>
 
 ### Available Scripts
 
@@ -384,17 +402,20 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Manual Deployment
 
 1. Build the applications:
+
 ```bash
 pnpm build
 ```
 
 2. Set up environment variables for production:
+
 ```bash
 cp .env.production .env.production.local
 # Edit .env.production.local with production settings
 ```
 
 3. Start the services:
+
 ```bash
 # Backend
 cd packages/backend
@@ -418,6 +439,7 @@ pnpm start:prod
 ### Production Monitoring
 
 The platform includes comprehensive monitoring capabilities:
+
 - Application metrics with Prometheus
 - Centralized logging with Loki
 - Visualization dashboards with Grafana
@@ -426,14 +448,222 @@ The platform includes comprehensive monitoring capabilities:
 ## API Documentation
 
 Once the backend is running, detailed API documentation is available through Swagger UI:
-- http://localhost:3000/api/docs (development)
-- https://your-domain.com/api/docs (production)
+
+- <http://localhost:3000/api/docs> (development)
+- <https://your-domain.com/api/docs> (production)
 
 The API follows RESTful principles and includes:
+
 - Comprehensive endpoint documentation
 - Request/response schemas
 - Interactive testing interface
 - Authentication flow explanations
+
+## Best Practices & Architecture Guide
+
+This section documents the architectural patterns and configurations used in this project, serving as a reference for building similar enterprise-grade applications.
+
+### Monorepo Structure (Turborepo + pnpm)
+
+```plaintext
+resume-optimizer/
+├── .github/                    # GitHub Actions & CI/CD
+│   ├── workflows/              # Automated workflows (CI, CD, security)
+│   ├── ISSUE_TEMPLATE/         # Standardized issue templates
+│   ├── dependabot.yml          # Automated dependency updates
+│   └── CODEOWNERS              # Code review assignments
+├── config/                     # Global configuration files
+├── deployment/                 # Production deployment
+│   ├── config/                 # Service configurations
+│   │   ├── nginx/              # Nginx reverse proxy config
+│   │   ├── postgres/           # PostgreSQL config (postgresql.conf, pg_hba.conf)
+│   │   ├── redis/              # Redis configuration
+│   │   └── ssl/                # SSL certificates
+│   ├── scripts/                # Deployment automation scripts
+│   │   ├── deploy.sh           # Main deployment orchestrator
+│   │   ├── backup-database.sh  # Database backup automation
+│   │   ├── restore-database.sh # Database restore script
+│   │   └── setup-ssl.sh        # SSL certificate setup
+│   └── docker-compose.prod.yml # Production Docker Compose
+├── packages/                   # Monorepo packages
+│   ├── backend/                # NestJS API service
+│   └── frontend/               # React SPA application
+├── docker-compose.yml          # Development Docker Compose
+├── turbo.json                  # Turborepo task configuration
+├── pnpm-workspace.yaml         # pnpm workspace definition
+└── package.json                # Root package with workspace scripts
+```
+
+### Backend Architecture (NestJS)
+
+The backend follows a **feature-based modular architecture**:
+
+```plaintext
+packages/backend/
+├── prisma/                     # Database layer
+│   ├── schema.prisma           # Data model definitions
+│   ├── migrations/             # Version-controlled migrations
+│   └── seeds/                  # Seed data scripts
+├── src/
+│   ├── main.ts                 # Application bootstrap
+│   ├── app.module.ts           # Root module with imports
+│   ├── ai/                     # Core AI processing engine
+│   ├── ai-providers/           # Multi-provider AI abstraction
+│   │   ├── config/             # Provider configuration
+│   │   ├── providers/          # OpenAI, Qwen, DeepSeek, Gemini, Ollama
+│   │   └── services/           # Model selection & fallback logic
+│   ├── auth/                   # Authentication (JWT, Passport)
+│   ├── common/                 # Shared utilities
+│   │   ├── decorators/         # Custom decorators
+│   │   ├── filters/            # Exception filters
+│   │   ├── guards/             # Auth & permission guards
+│   │   ├── interceptors/       # Request/response interceptors
+│   │   └── pipes/              # Validation pipes
+│   ├── storage/                # Multi-cloud storage abstraction
+│   │   └── providers/          # S3, OSS, COS, MinIO implementations
+│   ├── payment/                # Payment processing (Stripe, Paddle)
+│   ├── monitoring/             # Prometheus metrics & health checks
+│   ├── logger/                 # Winston structured logging
+│   └── [feature]/              # Feature modules (user, resume, job, etc.)
+│       ├── [feature].module.ts
+│       ├── [feature].controller.ts
+│       ├── [feature].service.ts
+│       ├── dto/                # Data transfer objects
+│       └── entities/           # Domain entities
+└── Dockerfile                  # Multi-stage production build
+```
+
+**Key Backend Patterns:**
+
+| Pattern | Implementation | Purpose |
+|---------|---------------|---------|
+| **Dependency Injection** | NestJS IoC Container | Loose coupling, testability |
+| **Repository Pattern** | Prisma ORM | Database abstraction |
+| **Factory Pattern** | AI/Storage Providers | Runtime provider selection |
+| **Strategy Pattern** | Payment Processors | Interchangeable algorithms |
+| **Decorator Pattern** | Custom Decorators | Cross-cutting concerns |
+| **Guard Pattern** | Auth Guards | Request authorization |
+
+### Frontend Architecture (React + Vite)
+
+```plaintext
+packages/frontend/
+├── src/
+│   ├── main.tsx                # React entry point
+│   ├── App.tsx                 # Root component with routing
+│   ├── components/             # Reusable UI components
+│   │   ├── common/             # Generic components
+│   │   └── [feature]/          # Feature-specific components
+│   ├── pages/                  # Route page components
+│   ├── layouts/                # Page layout templates
+│   ├── services/               # API client layer
+│   │   ├── api.ts              # Axios instance configuration
+│   │   └── [feature].service.ts
+│   ├── stores/                 # Zustand state management
+│   │   └── [feature]Store.ts
+│   ├── router/                 # React Router configuration
+│   ├── types/                  # TypeScript type definitions
+│   └── utils/                  # Utility functions
+├── vite.config.ts              # Vite build configuration
+└── Dockerfile                  # Nginx static file serving
+```
+
+### Docker Multi-Stage Builds (Best Practice)
+
+```dockerfile
+# Stage 1: Pruning (Turborepo)
+FROM node:20-alpine AS pruner
+RUN pnpm dlx turbo prune --scope=@package/name
+
+# Stage 2: Building
+FROM node:20-alpine AS builder
+COPY --from=pruner /app/out/json/ .
+RUN pnpm install --frozen-lockfile
+COPY --from=pruner /app/out/full/ .
+RUN pnpm run build
+
+# Stage 3: Runtime (minimal image)
+FROM node:20-alpine AS runner
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+CMD ["node", "dist/main.js"]
+```
+
+### CI/CD Pipeline Structure
+
+```plaintext
+.github/workflows/
+├── ci.yml                      # Continuous Integration
+│   ├── Lint & Format Check
+│   ├── Build Verification
+│   ├── Unit & Integration Tests
+│   └── Security Scanning
+├── cd.yml                      # Continuous Deployment
+│   ├── Build Docker Images
+│   ├── Push to Registry
+│   └── Deploy to Environment
+├── release.yml                 # Semantic Versioning
+└── security.yml                # Security Audits (CodeQL, Dependabot)
+```
+
+### Configuration Management
+
+| Environment | Files | Purpose |
+|-------------|-------|---------|
+| Development | `.env`, `docker-compose.yml` | Local development |
+| Production | `.env.production`, `deployment/docker-compose.prod.yml` | Production deployment |
+| Example | `.env.example`, `.env.production.example` | Template for new setups |
+
+### Recommended Tools & Versions
+
+| Category | Tool | Version | Purpose |
+|----------|------|---------|---------|
+| **Runtime** | Node.js | ≥20.x | LTS with modern features |
+| **Package Manager** | pnpm | ≥9.x | Efficient disk usage |
+| **Build Orchestration** | Turborepo | ≥2.x | Monorepo task caching |
+| **Database** | PostgreSQL | ≥15 | Primary data store |
+| **Cache** | Redis | ≥7 | Session & API caching |
+| **Containerization** | Docker | ≥24 | Application packaging |
+
+### Security Best Practices
+
+1. **Environment Variables**: Never commit secrets; use `.env.example` templates
+2. **CORS Configuration**: Whitelist specific origins in production
+3. **Rate Limiting**: Apply per-endpoint limits to prevent abuse
+4. **Input Validation**: Use `class-validator` DTOs for all inputs
+5. **SQL Injection**: Prisma ORM provides parameterized queries
+6. **XSS Protection**: Helmet middleware for security headers
+7. **Dependency Scanning**: Dependabot + CodeQL automated scanning
+
+### Quick Start Template
+
+To use this architecture for a new project:
+
+```bash
+# 1. Initialize monorepo
+mkdir my-project && cd my-project
+pnpm init
+echo 'packages:\n  - "packages/*"' > pnpm-workspace.yaml
+
+# 2. Create packages
+mkdir -p packages/{backend,frontend}
+
+# 3. Initialize Turborepo
+pnpm add -Dw turbo
+# Copy turbo.json configuration
+
+# 4. Setup CI/CD
+mkdir -p .github/workflows
+# Copy workflow templates
+
+# 5. Setup deployment
+mkdir -p deployment/{config,scripts}
+# Copy Docker Compose and scripts
+```
+
+## Contributing
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute to this project.
 
 ## License
 

@@ -114,13 +114,22 @@ fi
 
 # 检查环境文件
 if [ ! -f "$ENV_FILE" ]; then
-    print_error "环境配置文件不存在: $ENV_FILE"
+    print_warn "环境配置文件不存在: $ENV_FILE"
+    
     if [ "$ENV" = "prod" ]; then
-        print_info "请复制 .env.production.example 到 .env.production 并配置"
+        EXAMPLE_FILE=".env.production.example"
     else
-        print_info "请复制 .env.example 到 .env 并配置"
+        EXAMPLE_FILE=".env.example"
     fi
-    exit 1
+
+    if [ -f "$EXAMPLE_FILE" ]; then
+        print_info "正在从 $EXAMPLE_FILE 自动创建 $ENV_FILE ..."
+        cp "$EXAMPLE_FILE" "$ENV_FILE"
+        print_info "✓ 已成功创建 $ENV_FILE，请根据需要修改配置"
+    else
+        print_error "找不到示例文件: $EXAMPLE_FILE，无法自动创建"
+        exit 1
+    fi
 fi
 
 # 加载环境变量

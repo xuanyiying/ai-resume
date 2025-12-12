@@ -6,11 +6,7 @@
  */
 
 import { ModelInfo } from '../interfaces';
-import {
-  ModelSelector,
-  ScenarioType,
-  SelectionDecision,
-} from './model.selector';
+import { ModelSelector, ScenarioType } from './model.selector';
 import {
   CostOptimizedStrategy,
   QualityOptimizedStrategy,
@@ -572,6 +568,232 @@ describe('ModelSelector', () => {
       // Should not be the cheapest (ollama)
       expect(selected.name).not.toBe('gpt-4');
       expect(selected.name).not.toBe('llama-2');
+    });
+  });
+
+  describe('Property 21: Agent Scenario Routing', () => {
+    it('should define strategy for STAR extraction scenario', () => {
+      const strategy = selector.getStrategy(ScenarioType.AGENT_STAR_EXTRACTION);
+      expect(strategy).toBeDefined();
+      expect(strategy).toBeInstanceOf(CostOptimizedStrategy);
+    });
+
+    it('should define strategy for introduction generation scenario', () => {
+      const strategy = selector.getStrategy(
+        ScenarioType.AGENT_INTRODUCTION_GENERATION
+      );
+      expect(strategy).toBeDefined();
+      expect(strategy).toBeInstanceOf(QualityOptimizedStrategy);
+    });
+
+    it('should define strategy for response processing scenario', () => {
+      const strategy = selector.getStrategy(
+        ScenarioType.AGENT_RESPONSE_PROCESSING
+      );
+      expect(strategy).toBeDefined();
+      expect(strategy).toBeInstanceOf(LatencyOptimizedStrategy);
+    });
+
+    it('should define strategy for context compression scenario', () => {
+      const strategy = selector.getStrategy(
+        ScenarioType.AGENT_CONTEXT_COMPRESSION
+      );
+      expect(strategy).toBeDefined();
+      expect(strategy).toBeInstanceOf(CostOptimizedStrategy);
+    });
+
+    it('should define strategy for RAG retrieval scenario', () => {
+      const strategy = selector.getStrategy(ScenarioType.AGENT_RAG_RETRIEVAL);
+      expect(strategy).toBeDefined();
+      expect(strategy).toBeInstanceOf(CostOptimizedStrategy);
+    });
+
+    it('should select cost-optimized model for STAR extraction', () => {
+      const selected = selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_STAR_EXTRACTION
+      );
+
+      // Should select lowest cost model
+      expect(selected.name).toBe('llama-2');
+    });
+
+    it('should select quality-optimized model for introduction generation', () => {
+      const selected = selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_INTRODUCTION_GENERATION
+      );
+
+      // Should select highest quality model
+      expect(selected.name).toBe('gpt-4');
+    });
+
+    it('should select latency-optimized model for response processing', () => {
+      const selected = selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_RESPONSE_PROCESSING
+      );
+
+      // Should select fastest model
+      expect(selected.name).toBe('gpt-3.5-turbo');
+    });
+
+    it('should select cost-optimized model for context compression', () => {
+      const selected = selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_CONTEXT_COMPRESSION
+      );
+
+      // Should select lowest cost model
+      expect(selected.name).toBe('llama-2');
+    });
+
+    it('should select cost-optimized model for RAG retrieval', () => {
+      const selected = selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_RAG_RETRIEVAL
+      );
+
+      // Should select lowest cost model
+      expect(selected.name).toBe('llama-2');
+    });
+  });
+
+  describe('Property 22: Agent Selection Logging', () => {
+    it('should log Agent-specific context in selection decision', () => {
+      const agentContext = {
+        agentType: 'pitch-perfect',
+        workflowStep: 'introduction-generation',
+        userId: 'user-123',
+      };
+
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_INTRODUCTION_GENERATION,
+        undefined,
+        agentContext
+      );
+
+      const log = selector.getSelectionLog();
+      const decision = log[0];
+
+      expect(decision.agentType).toBe('pitch-perfect');
+      expect(decision.workflowStep).toBe('introduction-generation');
+      expect(decision.userId).toBe('user-123');
+    });
+
+    it('should log optimization effectiveness metrics', () => {
+      const agentContext = {
+        agentType: 'strategist',
+        workflowStep: 'question-generation',
+        optimizationEffectiveness: {
+          costSavings: 0.5,
+          latencySavings: 0.3,
+        },
+      };
+
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_CUSTOM_QUESTION_GENERATION,
+        undefined,
+        agentContext
+      );
+
+      const log = selector.getSelectionLog();
+      const decision = log[0];
+
+      expect(decision.optimizationEffectiveness?.costSavings).toBe(0.5);
+      expect(decision.optimizationEffectiveness?.latencySavings).toBe(0.3);
+    });
+
+    it('should include workflow step in debug log', () => {
+      const agentContext = {
+        agentType: 'role-play',
+        workflowStep: 'response-analysis',
+      };
+
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_RESPONSE_ANALYSIS,
+        undefined,
+        agentContext
+      );
+
+      const log = selector.getSelectionLog();
+      expect(log.length).toBeGreaterThan(0);
+      expect(log[0].workflowStep).toBe('response-analysis');
+    });
+
+    it('should track multiple Agent selections with different contexts', () => {
+      const context1 = {
+        agentType: 'pitch-perfect',
+        workflowStep: 'star-extraction',
+      };
+      const context2 = {
+        agentType: 'strategist',
+        workflowStep: 'question-generation',
+      };
+
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_STAR_EXTRACTION,
+        undefined,
+        context1
+      );
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_CUSTOM_QUESTION_GENERATION,
+        undefined,
+        context2
+      );
+
+      const log = selector.getSelectionLog();
+      expect(log.length).toBe(2);
+      expect(log[0].agentType).toBe('pitch-perfect');
+      expect(log[1].agentType).toBe('strategist');
+    });
+
+    it('should handle selection without Agent context', () => {
+      selector.selectModel(mockModels, ScenarioType.RESUME_PARSING);
+
+      const log = selector.getSelectionLog();
+      const decision = log[0];
+
+      expect(decision.agentType).toBeUndefined();
+      expect(decision.workflowStep).toBeUndefined();
+    });
+
+    it('should include all Agent scenarios in statistics', () => {
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_STAR_EXTRACTION,
+        undefined,
+        { agentType: 'pitch-perfect' }
+      );
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_INTRODUCTION_GENERATION,
+        undefined,
+        { agentType: 'pitch-perfect' }
+      );
+      selector.selectModel(
+        mockModels,
+        ScenarioType.AGENT_CUSTOM_QUESTION_GENERATION,
+        undefined,
+        { agentType: 'strategist' }
+      );
+
+      const stats = selector.getSelectionStatistics();
+
+      expect(
+        stats.scenarioStats[ScenarioType.AGENT_STAR_EXTRACTION]
+      ).toBeDefined();
+      expect(
+        stats.scenarioStats[ScenarioType.AGENT_INTRODUCTION_GENERATION]
+      ).toBeDefined();
+      expect(
+        stats.scenarioStats[ScenarioType.AGENT_CUSTOM_QUESTION_GENERATION]
+      ).toBeDefined();
     });
   });
 

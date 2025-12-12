@@ -20,6 +20,10 @@ import PaymentSuccessPage from '../pages/PaymentSuccessPage';
 import PaymentCancelPage from '../pages/PaymentCancelPage';
 import SubscriptionManagementPage from '../pages/SubscriptionManagementPage';
 import InterviewPage from '../pages/InterviewPage';
+import PitchPerfectPage from '../pages/PitchPerfectPage';
+import StrategistPage from '../pages/StrategistPage';
+import RolePlayPage from '../pages/RolePlayPage';
+import AgentMetricsPage from '../pages/AgentMetricsPage';
 
 const routes: RouteObject[] = [
   {
@@ -93,6 +97,22 @@ const routes: RouteObject[] = [
       {
         path: 'interview/:optimizationId',
         element: <InterviewPage />,
+      },
+      {
+        path: 'agents/pitch-perfect',
+        element: <PitchPerfectPage />,
+      },
+      {
+        path: 'agents/strategist',
+        element: <StrategistPage />,
+      },
+      {
+        path: 'agents/role-play',
+        element: <RolePlayPage />,
+      },
+      {
+        path: 'agents/metrics',
+        element: <AgentMetricsPage />,
       },
       {
         path: 'admin/prompts',

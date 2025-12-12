@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
 import { authService } from '../services/authService';
+import { authClient } from '../lib/auth-client';
 import './auth.css';
 
 const { Title, Text } = Typography;
@@ -179,11 +180,11 @@ const LoginPage: React.FC = () => {
                     size="large"
                     icon={<GoogleOutlined />}
                     style={{ width: '48px', height: '48px' }}
-                    onClick={() => {
-                      const backendUrl =
-                        import.meta.env.VITE_BACKEND_URL ||
-                        'http://localhost:3000';
-                      window.location.href = `${backendUrl}/auth/google`;
+                    onClick={async () => {
+                      await authClient.signIn.social({
+                        provider: 'google',
+                        callbackURL: '/',
+                      });
                     }}
                   />
                 )}
@@ -193,11 +194,11 @@ const LoginPage: React.FC = () => {
                     size="large"
                     icon={<GithubOutlined />}
                     style={{ width: '48px', height: '48px' }}
-                    onClick={() => {
-                      const backendUrl =
-                        import.meta.env.VITE_BACKEND_URL ||
-                        'http://localhost:3000';
-                      window.location.href = `${backendUrl}/auth/github`;
+                    onClick={async () => {
+                      await authClient.signIn.social({
+                        provider: 'github',
+                        callbackURL: '/',
+                      });
                     }}
                   />
                 )}

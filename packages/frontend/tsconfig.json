@@ -32,7 +32,13 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "vitest.setup.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ],
   "exclude": [
     "node_modules",
